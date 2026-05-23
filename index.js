@@ -1,7 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const db = require('./db');
+
+const userRoutes = require('./routes/userRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const orderHistoryRoutes = require('./routes/orderHistoryRoutes');
 
 const app = express();
 app.use(cors());
@@ -16,49 +23,16 @@ console.log("Port:", process.env.DB_PORT);
 console.log("===============");
 
 // ==========================================
-// ENDPOINT USERS
+// PENGGUNAAN ROUTES
 // ==========================================
-app.get('/api/v1/users', async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM users');
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal mengambil data users', detail: error.message });
-    }
-});
 
-app.post('/api/v1/users', async (req, res) => {
-    try {
-        const { name, email, role } = req.body;
-        await db.query('INSERT INTO users (name, email, role) VALUES (?, ?, ?)', [name, email, role || 'customer']);
-        res.json({ message: "User berhasil dibuat" });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal membuat user', detail: error.message });
-    }
-});
-
-// ==========================================
-// ENDPOINT ORDERS
-// ==========================================
-app.get('/api/v1/orders', async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM orders');
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal mengambil data orders', detail: error.message });
-    }
-});
-
-app.post('/api/v1/orders', async (req, res) => {
-    try {
-        const { user_id, service_id } = req.body;
-        // Pastikan tabel orders memiliki kolom user_id dan service_id sesuai database_schema.sql
-        await db.query('INSERT INTO orders (user_id, service_id, status) VALUES (?, ?, ?)', [user_id, service_id, 'Pending']);
-        res.json({ message: "Order berhasil dibuat" });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal membuat order', detail: error.message });
-    }
-});
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/chats', chatRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/order-history', orderHistoryRoutes);
 
 // ==========================================
 // START SERVER
