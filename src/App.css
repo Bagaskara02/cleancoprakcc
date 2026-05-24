@@ -372,6 +372,7 @@ body {
   border: 1px solid #CBD5E1 !important;
   transition: all 0.3s ease;
   font-family: inherit;
+  color: var(--text);
 }
 
 .auth-container input:focus, .auth-container textarea:focus {
