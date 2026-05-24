@@ -46,11 +46,6 @@ export default function Orders() {
     setPayment(null);
 
     try {
-      const trackRes = await apiUserOrder.get(`/tracking/${order.id}`);
-      setTracking(trackRes.data);
-    } catch (e) { /* ignore 404 */ }
-    
-    try {
       const histRes = await apiUserOrder.get(`/order-history/${order.id}`);
       setHistory(histRes.data);
     } catch (e) { /* ignore 404 */ }
@@ -79,6 +74,21 @@ export default function Orders() {
     }
     try {
       await apiUserOrder.patch(`/orders/${orderId}/assign`, { worker_id: selectedWorkerId });
+      
+      // Kirim notifikasi ke User
+      await apiUserOrder.post('/notifications', {
+        userId: selectedOrder.user_id,
+        title: 'Pekerja Ditugaskan',
+        message: 'berhasil mendapatkan pekerja tunggu pekerja datang'
+      });
+
+      // Kirim notifikasi ke Worker (menggunakan prefix worker_ untuk membedakan dengan userId jika ID nya sama)
+      await apiUserOrder.post('/notifications', {
+        userId: `worker_${selectedWorkerId}`,
+        title: 'Pekerjaan Baru',
+        message: 'mendapatkan pekerjaan'
+      });
+
       alert("Berhasil meng-assign pekerja!");
       fetchOrders();
       setSelectedOrder(null);
@@ -149,17 +159,24 @@ export default function Orders() {
                   <p className="text-sm mt-2"><span className="text-gray-500">Status Pekerjaan:</span> {selectedOrder.status.toUpperCase()}</p>
                   {selectedOrder.status === 'pending' && (
                     <div className="mt-3">
+                      {(!payment || payment.status === 'pending') && (
+                        <p className="text-xs text-red-500 mb-2 font-semibold">* Harap konfirmasi pembayaran lunas terlebih dahulu sebelum menugaskan pekerja.</p>
+                      )}
                       <select 
                         value={selectedWorkerId} 
                         onChange={(e) => setSelectedWorkerId(e.target.value)}
                         className="w-full text-sm border border-gray-300 rounded px-2 py-2 mb-2"
+                        disabled={!payment || payment.status === 'pending'}
                       >
                         <option value="">-- Pilih Pekerja --</option>
                         {workers.filter(w => w.status === 'available').map(w => (
                           <option key={w.id} value={w.id}>{w.name} (ID: {w.id})</option>
                         ))}
                       </select>
-                      <button onClick={() => handleAssignWorker(selectedOrder.id)} className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded w-full hover:bg-blue-700 transition-colors">
+                      <button 
+                        disabled={!payment || payment.status === 'pending'}
+                        onClick={() => handleAssignWorker(selectedOrder.id)} 
+                        className={`text-white text-xs font-bold px-3 py-2 rounded w-full transition-colors ${(!payment || payment.status === 'pending') ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                         Tugaskan Pekerja (Assign)
                       </button>
                     </div>
@@ -187,21 +204,8 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* Kolom Kanan: Tracking GPS & Foto */}
+              {/* Kolom Kanan: Foto Bukti & History */}
               <div className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                  <h4 className="font-semibold text-blue-800 mb-2">Tracking Lokasi (GPS)</h4>
-                  {tracking ? (
-                    <div>
-                      <p className="text-sm">Lat: <span className="font-mono bg-white px-1 rounded">{tracking.latitude}</span></p>
-                      <p className="text-sm mt-1">Lng: <span className="font-mono bg-white px-1 rounded">{tracking.longitude}</span></p>
-                      <p className="text-xs text-gray-500 mt-2">Update terakhir: {new Date(tracking.updatedAt).toLocaleTimeString()}</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">Pekerja belum membagikan lokasi.</p>
-                  )}
-                </div>
-
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <h4 className="font-semibold text-gray-700 mb-2">Log Pekerjaan & Foto Bukti</h4>
                   {history.length > 0 ? (
