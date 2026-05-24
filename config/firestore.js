@@ -19,7 +19,7 @@ try {
 
   admin.initializeApp({
     credential: credential,
-    projectId: process.env.PROJECT_ID || 'cleanco-739468618342'
+    projectId: process.env.PROJECT_ID || 'd-08-497210'
   });
   console.log("Firestore berhasil terkoneksi di Service User Order!");
 } catch (error) {
