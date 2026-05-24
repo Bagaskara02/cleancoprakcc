@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiWorkerService } from '../services/api';
 import { Info, PlusCircle } from 'lucide-react';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +21,7 @@ export default function Home() {
   }, []);
 
   const handleOrder = (service) => {
-    alert(`Proses pesanan untuk ${service.name} belum diimplementasikan di halaman ini.`);
+    navigate('/checkout', { state: { service } });
   };
 
   return (
