@@ -8,7 +8,6 @@ export default function Tracking() {
   const navigate = useNavigate();
   const { order } = location.state || {};
   
-  const [trackingData, setTrackingData] = useState(null);
   const [historyLogs, setHistoryLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,15 +19,7 @@ export default function Tracking() {
 
     const fetchData = async () => {
       try {
-        // 1. Ambil data tracking (lokasi GPS)
-        const trackRes = await apiUserOrder.get(`/api/v1/tracking/${order.id}`);
-        setTrackingData(trackRes.data);
-      } catch (err) {
-        console.log("Lokasi petugas belum tersedia", err);
-      }
-
-      try {
-        // 2. Ambil log history (termasuk foto sebelum-sesudah)
+        // Ambil log history (termasuk foto sebelum-sesudah)
         const histRes = await apiUserOrder.get(`/api/v1/order-history/${order.id}`);
         setHistoryLogs(histRes.data);
       } catch (err) {
@@ -54,39 +45,10 @@ export default function Tracking() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          {/* Bagian Tracking GPS */}
-          <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-              <MapPin size={20} color="#0ea5e9" /> Lokasi Petugas (GPS)
-            </h3>
-            {trackingData ? (
-              <div style={{ padding: '15px', backgroundColor: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd' }}>
-                <p style={{ margin: '0 0 10px 0' }}><strong>Pembaruan Terakhir:</strong> {new Date(trackingData.updatedAt).toLocaleTimeString('id-ID')}</p>
-                <div style={{ display: 'flex', gap: '15px' }}>
-                  <div style={{ flex: 1, padding: '10px', backgroundColor: 'white', borderRadius: '4px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>Latitude</span>
-                    <p style={{ margin: 0, fontWeight: 'bold' }}>{trackingData.latitude}</p>
-                  </div>
-                  <div style={{ flex: 1, padding: '10px', backgroundColor: 'white', borderRadius: '4px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '12px', color: '#64748b' }}>Longitude</span>
-                    <p style={{ margin: 0, fontWeight: 'bold' }}>{trackingData.longitude}</p>
-                  </div>
-                </div>
-                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '10px', textAlign: 'center' }}>
-                  *Dalam sistem nyata, ini akan dirender menjadi peta (Google Maps API)
-                </p>
-              </div>
-            ) : (
-              <p style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', color: '#64748b' }}>
-                Petugas belum menyalakan/membagikan lokasi GPS untuk pesanan ini.
-              </p>
-            )}
-          </div>
-
           {/* Bagian History & Foto Bukti Kerja */}
           <div>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-              <Clock size={20} color="#22c55e" /> Riwayat & Bukti Kerja
+              <Clock size={20} color="#22c55e" /> Log Waktu & Aktivitas
             </h3>
             
             {historyLogs.length === 0 ? (
