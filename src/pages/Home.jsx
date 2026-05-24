@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // Mencoba mengambil data dari backend.
-    apiWorkerService.get('/services').then(res => {
+    apiWorkerService.get('/api/v2/services').then(res => {
       setServices(res.data);
       setLoading(false);
     }).catch(err => {
