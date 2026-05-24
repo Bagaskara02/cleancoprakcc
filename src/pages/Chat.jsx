@@ -23,7 +23,7 @@ export default function Chat() {
         const response = await apiUserOrder.get(`/api/v1/chats/${order.id}`);
         setMessages(response.data);
       } catch (error) {
-        console.error('Gagal mengambil pesan', error);
+        console.error('Gagal mengambil pesan', error, error.response?.data?.detail);
       } finally {
         setLoading(false);
       }
@@ -49,8 +49,9 @@ export default function Chat() {
       await apiUserOrder.post('/api/v1/chats', payload);
       setNewMessage('');
     } catch (error) {
+      const detail = error.response?.data?.detail || '';
       console.error('Gagal mengirim pesan', error);
-      alert('Gagal mengirim pesan');
+      alert(`Gagal mengirim pesan. ${detail}`);
     }
   };
 
