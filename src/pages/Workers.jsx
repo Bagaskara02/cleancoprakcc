@@ -6,6 +6,7 @@ export default function Workers() {
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingWorkerId, setEditingWorkerId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', phone: '', status: 'available'
   });
@@ -35,17 +36,47 @@ export default function Workers() {
     }
   };
 
-  const handleCreateWorker = async (e) => {
+  const handleCreateOrUpdateWorker = async (e) => {
     e.preventDefault();
     try {
-      await apiWorkerService.post('/workers', formData);
-      alert('Pekerja berhasil ditambahkan!');
+      if (editingWorkerId) {
+        await apiWorkerService.put(`/workers/${editingWorkerId}`, formData);
+        alert('Pekerja berhasil diperbarui!');
+      } else {
+        await apiWorkerService.post('/workers', formData);
+        alert('Pekerja berhasil ditambahkan!');
+      }
       setShowModal(false);
+      setEditingWorkerId(null);
       setFormData({ name: '', email: '', password: '', phone: '', status: 'available' });
       fetchWorkers();
     } catch (err) {
       console.error(err);
-      alert('Gagal membuat pekerja baru');
+      alert(editingWorkerId ? 'Gagal memperbarui pekerja' : 'Gagal membuat pekerja baru');
+    }
+  };
+
+  const handleEditClick = (worker) => {
+    setFormData({
+      name: worker.name,
+      email: worker.email,
+      password: worker.password,
+      phone: worker.phone,
+      status: worker.status
+    });
+    setEditingWorkerId(worker.id);
+    setShowModal(true);
+  };
+
+  const handleDeleteWorker = async (id) => {
+    if (!window.confirm("Yakin ingin menghapus pekerja ini?")) return;
+    try {
+      await apiWorkerService.delete(`/workers/${id}`);
+      alert('Pekerja berhasil dihapus');
+      fetchWorkers();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menghapus pekerja');
     }
   };
 
@@ -54,7 +85,11 @@ export default function Workers() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Manajemen Pekerja</h1>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setEditingWorkerId(null);
+            setFormData({ name: '', email: '', password: '', phone: '', status: 'available' });
+            setShowModal(true);
+          }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors"
         >
           + Tambah Pekerja
@@ -73,6 +108,7 @@ export default function Workers() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -101,6 +137,14 @@ export default function Workers() {
                       {worker.status.toUpperCase()}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-3">
+                    <button onClick={() => handleEditClick(worker)} className="text-blue-600 hover:text-blue-900">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDeleteWorker(worker.id)} className="text-red-600 hover:text-red-900">
+                      Hapus
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -112,8 +156,8 @@ export default function Workers() {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Tambah Pekerja Baru</h2>
-            <form onSubmit={handleCreateWorker} className="space-y-4">
+            <h2 className="text-xl font-bold mb-4">{editingWorkerId ? 'Edit Pekerja' : 'Tambah Pekerja Baru'}</h2>
+            <form onSubmit={handleCreateOrUpdateWorker} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
                 <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full border p-2 rounded-lg" />

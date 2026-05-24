@@ -4,6 +4,7 @@ import { apiWorkerService } from '../services/api';
 export default function Services() {
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ name: '', description: '', price: '', duration_minutes: '' });
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     const getInitialServices = async () => {
@@ -29,12 +30,27 @@ export default function Services() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiWorkerService.post('/services', form);
+      if (editingId) {
+        await apiWorkerService.put(`/services/${editingId}`, form);
+        setEditingId(null);
+      } else {
+        await apiWorkerService.post('/services', form);
+      }
       setForm({ name: '', description: '', price: '', duration_minutes: '' });
       await refreshData();
     } catch (err) {
-      console.error("Gagal menambah layanan:", err);
+      console.error("Gagal menyimpan layanan:", err);
     }
+  };
+
+  const handleEditClick = (service) => {
+    setForm({
+      name: service.name,
+      description: service.description,
+      price: service.price,
+      duration_minutes: service.duration_minutes
+    });
+    setEditingId(service.id);
   };
 
   const handleDelete = async (id) => {
@@ -80,9 +96,22 @@ export default function Services() {
           onChange={e => setForm({...form, description: e.target.value})} 
           className="border p-2 rounded w-full" 
         />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 transition md:col-span-2">
-          Tambah Layanan Baru
-        </button>
+        <div className="md:col-span-2 flex gap-2">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 transition flex-1">
+            {editingId ? 'Simpan Perubahan' : 'Tambah Layanan Baru'}
+          </button>
+          {editingId && (
+            <button 
+              type="button" 
+              onClick={() => {
+                setEditingId(null);
+                setForm({ name: '', description: '', price: '', duration_minutes: '' });
+              }} 
+              className="bg-gray-400 text-white px-4 py-2 rounded font-semibold hover:bg-gray-500 transition">
+              Batal
+            </button>
+          )}
+        </div>
       </form>
 
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
@@ -104,7 +133,10 @@ export default function Services() {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">{s.duration_minutes} Menit</td>
                 <td className="px-6 py-4 text-sm text-gray-900 font-semibold">Rp {parseFloat(s.price).toLocaleString('id-ID')}</td>
-                <td className="px-6 py-4 text-right text-sm font-medium">
+                <td className="px-6 py-4 text-right text-sm font-medium flex justify-end gap-3">
+                  <button onClick={() => handleEditClick(s)} className="text-blue-500 hover:text-blue-700">
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(s.id)} className="text-red-500 hover:text-red-700">
                     Hapus
                   </button>
