@@ -38,9 +38,20 @@ const updateStatus = async (req, res) => {
     }
 };
 
+const assignWorker = async (req, res) => {
+    try {
+        const { worker_id } = req.body;
+        await orderModel.assignWorker(req.params.id, worker_id);
+        res.json({ message: "Worker berhasil ditugaskan" });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal menugaskan worker', detail: error.message });
+    }
+};
+
 module.exports = {
     getOrders,
     getOrdersByUser,
     addOrder,
-    updateStatus
+    updateStatus,
+    assignWorker
 };

@@ -36,9 +36,14 @@ const updateOrderStatus = async (id, status) => {
     return await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
 };
 
+const assignWorker = async (id, worker_id) => {
+    return await db.query('UPDATE orders SET status = ?, worker_id = ? WHERE id = ?', ['accepted', worker_id, id]);
+};
+
 module.exports = {
     getAllOrders,
     getOrdersByUserId,
     createOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    assignWorker
 };
