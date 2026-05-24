@@ -22,8 +22,8 @@ const getPaymentDetail = async (req, res) => {
 
 const confirmPayment = async (req, res) => {
     try {
-        await paymentModel.updatePaymentStatus(req.params.id, 'completed');
-        res.json({ message: "Status pembayaran berhasil diupdate menjadi completed" });
+        await paymentModel.updatePaymentStatus(req.params.id, 'paid');
+        res.json({ message: "Status pembayaran berhasil diupdate menjadi paid" });
     } catch (error) {
         res.status(500).json({ error: 'Gagal update status pembayaran', detail: error.message });
     }
