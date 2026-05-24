@@ -9,6 +9,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const orderHistoryRoutes = require('./routes/orderHistoryRoutes');
+const trackingRoutes = require('./routes/trackingRoutes');
 
 const app = express();
 app.use(cors());
@@ -33,6 +34,7 @@ app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/order-history', orderHistoryRoutes);
+app.use('/api/v1/tracking', trackingRoutes);
 
 // ==========================================
 // START SERVER

@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel');
+const crypto = require('crypto');
 
 const getUsers = async (req, res) => {
     try {
@@ -22,15 +23,48 @@ const getUserById = async (req, res) => {
 const addUser = async (req, res) => {
     try {
         const { name, email, password, phone, address } = req.body;
-        await userModel.createUser(name, email, password, phone, address);
+        
+        // Hashing password dengan SHA256
+        const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+        
+        await userModel.createUser(name, email, hashedPassword, phone, address);
         res.json({ message: "User berhasil dibuat" });
     } catch (error) {
         res.status(500).json({ error: 'Gagal membuat user', detail: error.message });
     }
 };
 
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        // Cek apakah user dengan email tersebut ada
+        const user = await userModel.getUserByEmail(email);
+        if (!user) {
+            return res.status(401).json({ error: 'Email atau password salah' });
+        }
+
+        // Cek kecocokan password dengan hashing SHA256
+        const hashedInputPassword = crypto.createHash('sha256').update(password).digest('hex');
+        if (user.password !== hashedInputPassword) {
+            return res.status(401).json({ error: 'Email atau password salah' });
+        }
+
+        // Login sukses, kirim data user tanpa password
+        const { password: _, ...userData } = user;
+        res.json({ 
+            message: 'Login berhasil', 
+            user: userData 
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal melakukan login', detail: error.message });
+    }
+};
+
 module.exports = {
     getUsers,
     getUserById,
-    addUser
+    addUser,
+    loginUser
 };

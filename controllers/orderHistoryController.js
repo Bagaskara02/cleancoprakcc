@@ -3,7 +3,7 @@ const db = require('../config/firestore');
 // Mencatat histori pembaruan status pekerjaan (NoSQL)
 const logOrderStatus = async (req, res) => {
     try {
-        const { orderId, status, updatedByRole, note } = req.body;
+        const { orderId, status, updatedByRole, note, photo_url } = req.body;
 
         const historyRef = db.collection('order_history').doc(String(orderId)).collection('logs').doc();
         
@@ -12,6 +12,7 @@ const logOrderStatus = async (req, res) => {
             status,
             updatedByRole, // contoh: 'worker' atau 'system'
             note: note || '',
+            photo_url: photo_url || null, // Untuk foto sebelum/sesudah pekerjaan
             timestamp: new Date().toISOString()
         };
 

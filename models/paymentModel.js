@@ -1,9 +1,9 @@
 const db = require('../config/database');
 
-const createPayment = async (orderId, amount, paymentMethod, status) => {
+const createPayment = async (orderId, amount, paymentMethod, status, proofUrl) => {
     return await db.query(
-        'INSERT INTO payments (order_id, amount, payment_method, payment_status) VALUES (?, ?, ?, ?)',
-        [orderId, amount, paymentMethod, status]
+        'INSERT INTO payments (order_id, amount, payment_method, status, proof_url) VALUES (?, ?, ?, ?, ?)',
+        [orderId, amount, paymentMethod, status, proofUrl]
     );
 };
 
@@ -13,7 +13,7 @@ const getPaymentByOrderId = async (orderId) => {
 };
 
 const updatePaymentStatus = async (id, status) => {
-    return await db.query('UPDATE payments SET payment_status = ? WHERE id = ?', [status, id]);
+    return await db.query('UPDATE payments SET status = ? WHERE id = ?', [status, id]);
 };
 
 module.exports = {

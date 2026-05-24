@@ -2,8 +2,8 @@ const paymentModel = require('../models/paymentModel');
 
 const processPayment = async (req, res) => {
     try {
-        const { orderId, amount, paymentMethod } = req.body;
-        await paymentModel.createPayment(orderId, amount, paymentMethod, 'pending');
+        const { order_id, amount, payment_method, proof_url } = req.body;
+        await paymentModel.createPayment(order_id, amount, payment_method, 'pending', proof_url);
         res.status(201).json({ message: "Pembayaran berhasil diproses dengan status pending" });
     } catch (error) {
         res.status(500).json({ error: 'Gagal memproses pembayaran', detail: error.message });
