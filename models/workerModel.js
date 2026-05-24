@@ -29,10 +29,24 @@ const loginWorker = async (email, password) => {
     return rows[0];
 };
 
+const updateWorker = async (id, data) => {
+    const { name, email, password, phone, status } = data;
+    return await db.query(
+        'UPDATE workers SET name = ?, email = ?, password = ?, phone = ?, status = ? WHERE id = ?',
+        [name, email, password, phone, status, id]
+    );
+};
+
+const deleteWorker = async (id) => {
+    return await db.query('DELETE FROM workers WHERE id = ?', [id]);
+};
+
 module.exports = {
     getAllWorkers,
     getWorkerById,
     updateWorkerStatus,
     createWorker,
-    loginWorker
+    loginWorker,
+    updateWorker,
+    deleteWorker
 };

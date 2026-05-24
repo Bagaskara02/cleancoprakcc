@@ -7,5 +7,7 @@ router.post('/', workerController.createWorker);
 router.post('/login', workerController.login);
 router.get('/:id', workerController.getWorkerById);
 router.patch('/:id/status', workerController.updateStatus);
+router.put('/:id', workerController.updateWorker);
+router.delete('/:id', workerController.removeWorker);
 
 module.exports = router;

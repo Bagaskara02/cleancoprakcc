@@ -51,10 +51,30 @@ const login = async (req, res) => {
     }
 };
 
+const updateWorker = async (req, res) => {
+    try {
+        await workerModel.updateWorker(req.params.id, req.body);
+        res.json({ message: "Worker berhasil diupdate" });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal update worker', detail: error.message });
+    }
+};
+
+const removeWorker = async (req, res) => {
+    try {
+        await workerModel.deleteWorker(req.params.id);
+        res.json({ message: "Worker berhasil dihapus" });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal menghapus worker', detail: error.message });
+    }
+};
+
 module.exports = {
     getWorkers,
     getWorkerById,
     updateStatus,
     createWorker,
-    login
+    login,
+    updateWorker,
+    removeWorker
 };
