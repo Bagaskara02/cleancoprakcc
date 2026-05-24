@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiWorkerService } from '../services/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Workers() {
   const [workers, setWorkers] = useState([]);
@@ -8,6 +9,14 @@ export default function Workers() {
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', phone: '', status: 'available'
   });
+  const [visiblePasswords, setVisiblePasswords] = useState({});
+
+  const togglePasswordVisibility = (id) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   useEffect(() => {
     fetchWorkers();
@@ -61,6 +70,7 @@ export default function Workers() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
@@ -72,6 +82,16 @@ export default function Workers() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{worker.name}</div>
                     <div className="text-sm text-gray-500">{worker.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                        {visiblePasswords[worker.id] ? worker.password : '••••••••'}
+                      </span>
+                      <button onClick={() => togglePasswordVisibility(worker.id)} className="text-gray-400 hover:text-gray-600">
+                        {visiblePasswords[worker.id] ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{worker.phone}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
