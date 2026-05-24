@@ -5,6 +5,7 @@ import { MapPin, Clock, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function WorkerDashboard() {
   const [orders, setOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -13,7 +14,17 @@ export default function WorkerDashboard() {
 
   useEffect(() => {
     fetchOrders();
+    fetchReviews();
   }, []);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await apiUserOrder.get(`/api/v1/reviews/worker/${WORKER_ID}`);
+      setReviews(res.data);
+    } catch (error) {
+      console.error("Gagal mengambil ulasan:", error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -84,6 +95,29 @@ export default function WorkerDashboard() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Ulasan & Penilaian</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          {reviews.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">Belum ada ulasan untuk Anda.</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((r, idx) => (
+                <div key={idx} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-yellow-500 font-bold">{'★'.repeat(r.rating)}</span>
+                    <span className="text-gray-300">{'★'.repeat(5 - r.rating)}</span>
+                    <span className="text-sm font-semibold text-gray-700 ml-2">({r.rating}/5)</span>
+                  </div>
+                  <p className="text-gray-600 text-sm italic">"{r.comment}"</p>
+                  <p className="text-xs text-gray-400 mt-2">{new Date(r.created_at).toLocaleString('id-ID')} - Order #{r.order_id}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
