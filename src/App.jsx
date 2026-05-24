@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
 import Orders from './pages/Orders';
 import Login from './pages/Login';
+import Workers from './pages/Workers';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="services" element={<Services />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="workers" element={<Workers />} />
         </Route>
       </Routes>
     </Router>

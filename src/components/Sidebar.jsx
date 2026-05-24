@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, Briefcase, LogOut } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Briefcase, LogOut, Users } from 'lucide-react';
 
 export default function Sidebar() {
   const menus = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Katalog Layanan', path: '/services', icon: <Briefcase size={20} /> },
+    { name: 'Data Pekerja', path: '/workers', icon: <Users size={20} /> },
     { name: 'Data Pesanan', path: '/orders', icon: <ClipboardList size={20} /> },
   ];
 
