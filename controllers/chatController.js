@@ -31,7 +31,7 @@ const sendMessage = async (req, res) => {
         });
     } catch (error) {
         console.error('Error saat kirim pesan:', error);
-        res.status(500).json({ error: 'Gagal mengirim pesan chat' });
+        res.status(500).json({ error: 'Gagal mengirim pesan chat', detail: error.message });
     }
 };
 
@@ -54,7 +54,7 @@ const getChatMessages = async (req, res) => {
         res.status(200).json(messages);
     } catch (error) {
         console.error('Error mengambil pesan chat:', error);
-        res.status(500).json({ error: 'Gagal mengambil data chat' });
+        res.status(500).json({ error: 'Gagal mengambil data chat', detail: error.message });
     }
 };
 
