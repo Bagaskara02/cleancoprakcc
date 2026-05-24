@@ -2,7 +2,7 @@ steps:
   # Install dependencies
   - name: 'node:22'
     entrypoint: npm
-    args: ['ci']
+    args: ['install']
 
   # Build frontend
   - name: 'node:22'
