@@ -40,7 +40,14 @@ export default function Checkout() {
       // Buat pesanan
       const response = await apiUserOrder.post('/api/v1/orders', orderData);
       
-      alert('Pesanan berhasil dibuat!');
+      // Kirim notifikasi
+      await apiUserOrder.post('/api/v1/notifications', {
+        userId: userId,
+        title: 'Pesanan Baru',
+        message: 'berhasil membuat pesanan lanjutkan pembayaran'
+      });
+      
+      alert('pesanan telah dibuat lanjutkan pembayaran');
       // TODO: Harusnya diarahkan ke Payment dengan ID order yang valid, 
       // tapi karena API addOrder belum mereturn ID order yang baru, kita asumsikan saja diarahkan ke riwayat pesanan
       navigate('/orders');

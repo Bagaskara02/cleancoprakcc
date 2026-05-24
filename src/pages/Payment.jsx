@@ -9,9 +9,15 @@ export default function Payment() {
   const navigate = useNavigate();
   const { order } = location.state || {};
 
-  const [paymentMethod, setPaymentMethod] = useState('Transfer Bank');
-  const [proofUrl, setProofUrl] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Transfer Bank BCA');
+  const [proofFile, setProofFile] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setProofFile(e.target.files[0]);
+    }
+  };
 
   const handlePayment = async (e) => {
     e.preventDefault();
@@ -22,15 +28,37 @@ export default function Payment() {
 
     setLoading(true);
     try {
+      let uploadedProofUrl = 'https://example.com/dummy-proof.jpg';
+      
+      // Upload file jika ada
+      if (proofFile) {
+        const formData = new FormData();
+        formData.append('photo', proofFile);
+        const uploadRes = await apiWorkerService.post('/api/v2/photos/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadedProofUrl = uploadRes.data.url;
+      }
+
       // POST ke /api/v1/payments
       await apiUserOrder.post('/api/v1/payments', {
         order_id: order.id,
         amount: order.total_price,
         payment_method: paymentMethod,
-        proof_url: proofUrl || 'https://example.com/dummy-proof.jpg' // Karena belum ada fitur upload ke GCS, pakai dummy
+        proof_url: uploadedProofUrl
       });
       
-      alert('Pembayaran berhasil dikirim dan menunggu konfirmasi admin!');
+      // Kirim notifikasi
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        await apiUserOrder.post('/api/v1/notifications', {
+          userId: userId,
+          title: 'Pembayaran Diterima',
+          message: 'berhasil mengupload bukti pembayaran harap tunggu verifikasi dari admin'
+        });
+      }
+      
+      alert('Pembayaran berhasil tunggu verifikasi dari admin');
       navigate('/orders');
     } catch (err) {
       console.error("Gagal melakukan pembayaran:", err);
@@ -78,13 +106,12 @@ export default function Payment() {
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>URL Bukti Transfer (Opsional untuk MVP)</label>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Upload Bukti Transfer (Dari Galeri)</label>
           <input 
-            type="url" 
-            value={proofUrl}
-            onChange={(e) => setProofUrl(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            placeholder="https://..."
+            type="file" 
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' }}
           />
         </div>
         <button disabled={loading} type="submit" style={{ padding: '12px', backgroundColor: loading ? '#94a3b8' : '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
