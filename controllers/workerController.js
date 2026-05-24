@@ -29,8 +29,18 @@ const updateStatus = async (req, res) => {
     }
 };
 
+const createWorker = async (req, res) => {
+    try {
+        const result = await workerModel.createWorker(req.body);
+        res.status(201).json({ message: "Worker berhasil ditambahkan", id: result.insertId });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal membuat worker', detail: error.message });
+    }
+};
+
 module.exports = {
     getWorkers,
     getWorkerById,
-    updateStatus
+    updateStatus,
+    createWorker
 };

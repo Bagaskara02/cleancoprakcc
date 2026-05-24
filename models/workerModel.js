@@ -15,8 +15,18 @@ const updateWorkerStatus = async (id, status) => {
     return await db.query('UPDATE workers SET status = ? WHERE id = ?', [status, id]);
 };
 
+const createWorker = async (data) => {
+    const { name, email, password, phone, status } = data;
+    const [result] = await db.query(
+        'INSERT INTO workers (name, email, password, phone, status) VALUES (?, ?, ?, ?, ?)',
+        [name, email, password, phone, status || 'available']
+    );
+    return result;
+};
+
 module.exports = {
     getAllWorkers,
     getWorkerById,
-    updateWorkerStatus
+    updateWorkerStatus,
+    createWorker
 };
