@@ -17,7 +17,7 @@ export default function Orders() {
       return;
     }
 
-    apiUserOrder.get(`/orders/user/${userId}`).then(res => {
+    apiUserOrder.get(`/api/v1/orders/user/${userId}`).then(res => {
       setOrders(res.data);
       setLoading(false);
     }).catch(err => {
