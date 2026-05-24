@@ -3,12 +3,21 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Services from './pages/Services';
 import Orders from './pages/Orders';
+import Login from './pages/Login';
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected Routes */}
+        <Route 
+          path="/" 
+          element={
+            localStorage.getItem('adminToken') ? <Layout /> : <Navigate to="/login" replace />
+          }
+        >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="services" element={<Services />} />

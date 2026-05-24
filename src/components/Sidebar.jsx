@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, Briefcase } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Briefcase, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const menus = [
@@ -18,6 +18,18 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      
+      <div className="absolute bottom-4 w-56">
+        <button 
+          onClick={() => {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/login';
+          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-left text-red-400 hover:bg-slate-800 transition-colors"
+        >
+          <LogOut size={20} /> <span>Keluar</span>
+        </button>
+      </div>
     </aside>
   );
 }
