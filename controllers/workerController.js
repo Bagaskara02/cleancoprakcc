@@ -38,9 +38,23 @@ const createWorker = async (req, res) => {
     }
 };
 
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const worker = await workerModel.loginWorker(email, password);
+        if (!worker) return res.status(401).json({ error: 'Email atau password salah' });
+        
+        // For MVP, just return the worker data directly without JWT
+        res.json({ message: "Login berhasil", worker });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal login worker', detail: error.message });
+    }
+};
+
 module.exports = {
     getWorkers,
     getWorkerById,
     updateStatus,
-    createWorker
+    createWorker,
+    login
 };

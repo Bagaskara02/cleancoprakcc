@@ -24,9 +24,15 @@ const createWorker = async (data) => {
     return result;
 };
 
+const loginWorker = async (email, password) => {
+    const [rows] = await db.query('SELECT * FROM workers WHERE email = ? AND password = ?', [email, password]);
+    return rows[0];
+};
+
 module.exports = {
     getAllWorkers,
     getWorkerById,
     updateWorkerStatus,
-    createWorker
+    createWorker,
+    loginWorker
 };
