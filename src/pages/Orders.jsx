@@ -51,10 +51,11 @@ export default function Orders() {
 
   const handleConfirmPayment = async (paymentId) => {
     try {
-      await apiUserOrder.patch(`/payments/${paymentId}/status`);
+      await apiUserOrder.patch(`/payments/${paymentId}/status`, {});
       alert("Pembayaran berhasil dikonfirmasi!");
       openModal(selectedOrder); // refresh modal data
     } catch (error) {
+      console.error("Gagal konfirmasi pembayaran:", error.response || error);
       alert("Gagal konfirmasi pembayaran.");
     }
   };
