@@ -41,6 +41,7 @@ export default function Orders() {
     try {
       await apiUserOrder.post('/api/v1/reviews', {
         orderId: selectedOrder.id,
+        userId: userId,
         workerId: selectedOrder.worker_id,
         rating: reviewData.rating,
         comment: reviewData.comment
