@@ -1,9 +1,9 @@
 const db = require('../config/database');
 
-const createReview = async (orderId, workerId, rating, comment) => {
+const createReview = async (orderId, userId, workerId, rating, comment) => {
     return await db.query(
-        'INSERT INTO reviews (order_id, worker_id, rating, comment) VALUES (?, ?, ?, ?)',
-        [orderId, workerId, rating, comment]
+        'INSERT INTO reviews (order_id, user_id, worker_id, rating, comment) VALUES (?, ?, ?, ?, ?)',
+        [orderId, userId, workerId, rating, comment]
     );
 };
 
