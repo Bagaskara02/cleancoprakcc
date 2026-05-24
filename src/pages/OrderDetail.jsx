@@ -11,6 +11,9 @@ export default function OrderDetail() {
   const [loading, setLoading] = useState(!order);
   const [tracking, setTracking] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const [pendingAction, setPendingAction] = useState(null); // 'start' atau 'finish'
   
   const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
   const WORKER_ID = workerData.id || 1;
@@ -44,12 +47,43 @@ export default function OrderDetail() {
     }
   };
 
-  const handleStartWork = () => {
-    updateStatus('in_progress', 'Pekerja telah tiba dan mulai membersihkan.', 'https://placehold.co/600x400/png?text=Foto+Sebelum');
+  const triggerPhotoUpload = (actionType) => {
+    setPendingAction(actionType);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
-  const handleFinishWork = () => {
-    updateStatus('completed', 'Pekerjaan selesai dilakukan dengan baik.', 'https://placehold.co/600x400/png?text=Foto+Sesudah');
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      // Upload ke service-worker
+      const uploadRes = await apiWorkerService.post('/api/v2/photos/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const photoUrl = uploadRes.data.url;
+
+      if (pendingAction === 'start') {
+        await updateStatus('in_progress', 'Pekerja telah tiba dan mulai membersihkan.', photoUrl);
+      } else if (pendingAction === 'finish') {
+        await updateStatus('completed', 'Pekerjaan selesai dilakukan dengan baik.', photoUrl);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Gagal mengupload foto');
+    } finally {
+      setUploading(false);
+      setPendingAction(null);
+      // reset input value so the same file can be selected again if needed
+      e.target.value = '';
+    }
   };
 
   const toggleTracking = () => {
@@ -137,17 +171,19 @@ export default function OrderDetail() {
             
             {order.status !== 'in_progress' && order.status !== 'completed' && (
               <button 
-                onClick={handleStartWork}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-sky-600 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold">
-                <Camera size={20} /> Mulai Pekerjaan & Foto Sebelum
+                onClick={() => triggerPhotoUpload('start')}
+                disabled={uploading}
+                className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-sky-500 to-sky-600'}`}>
+                <Camera size={20} /> {uploading && pendingAction === 'start' ? 'Mengupload...' : 'Mulai Pekerjaan & Foto Sebelum'}
               </button>
             )}
 
             {order.status === 'in_progress' && (
               <button 
-                onClick={handleFinishWork}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold">
-                <Check size={20} /> Selesaikan Pekerjaan & Foto Sesudah
+                onClick={() => triggerPhotoUpload('finish')}
+                disabled={uploading}
+                className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-green-500 to-green-600'}`}>
+                <Check size={20} /> {uploading && pendingAction === 'finish' ? 'Mengupload...' : 'Selesaikan Pekerjaan & Foto Sesudah'}
               </button>
             )}
 
@@ -159,6 +195,14 @@ export default function OrderDetail() {
           </div>
         </div>
       </div>
+
+      <input 
+        type="file" 
+        accept="image/*" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        style={{ display: 'none' }} 
+      />
     </div>
   );
 }
