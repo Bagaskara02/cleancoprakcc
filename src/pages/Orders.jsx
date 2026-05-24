@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { apiUserOrder } from '../services/api';
+import { apiUserOrder, apiWorkerService } from '../services/api';
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedWorkerId, setSelectedWorkerId] = useState('');
   
   // States for the modal data
   const [tracking, setTracking] = useState(null);
@@ -13,7 +15,17 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
+    fetchWorkers();
   }, []);
+
+  const fetchWorkers = async () => {
+    try {
+      const res = await apiWorkerService.get('/workers');
+      setWorkers(res.data);
+    } catch (err) {
+      console.error('Gagal mengambil pekerja:', err);
+    }
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -61,13 +73,16 @@ export default function Orders() {
   };
 
   const handleAssignWorker = async (orderId) => {
+    if (!selectedWorkerId) {
+      alert("Silakan pilih pekerja terlebih dahulu!");
+      return;
+    }
     try {
-      // API call to assign worker and change status to 'accepted'
-      // Untuk MVP kita update status pesanan langsung saja via order status api
-      await apiUserOrder.patch(`/orders/${orderId}/status`, { status: 'accepted' });
-      alert("Berhasil meng-assign pekerja (Status -> Accepted)");
+      await apiUserOrder.patch(`/orders/${orderId}/assign`, { worker_id: selectedWorkerId });
+      alert("Berhasil meng-assign pekerja!");
       fetchOrders();
       setSelectedOrder(null);
+      setSelectedWorkerId('');
     } catch (error) {
       alert("Gagal meng-assign pekerja.");
     }
@@ -133,9 +148,21 @@ export default function Orders() {
                   <p className="text-sm"><span className="text-gray-500">Harga:</span> Rp {parseFloat(selectedOrder.total_price).toLocaleString('id-ID')}</p>
                   <p className="text-sm mt-2"><span className="text-gray-500">Status Pekerjaan:</span> {selectedOrder.status.toUpperCase()}</p>
                   {selectedOrder.status === 'pending' && (
-                    <button onClick={() => handleAssignWorker(selectedOrder.id)} className="mt-3 bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded w-full">
-                      Tugaskan Pekerja (Assign)
-                    </button>
+                    <div className="mt-3">
+                      <select 
+                        value={selectedWorkerId} 
+                        onChange={(e) => setSelectedWorkerId(e.target.value)}
+                        className="w-full text-sm border border-gray-300 rounded px-2 py-2 mb-2"
+                      >
+                        <option value="">-- Pilih Pekerja --</option>
+                        {workers.filter(w => w.status === 'available').map(w => (
+                          <option key={w.id} value={w.id}>{w.name} (ID: {w.id})</option>
+                        ))}
+                      </select>
+                      <button onClick={() => handleAssignWorker(selectedOrder.id)} className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded w-full hover:bg-blue-700 transition-colors">
+                        Tugaskan Pekerja (Assign)
+                      </button>
+                    </div>
                   )}
                 </div>
 
