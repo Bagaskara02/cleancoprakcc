@@ -19,7 +19,8 @@ try {
   }
 
   admin.initializeApp({
-    credential: credential
+    credential: credential,
+    projectId: process.env.PROJECT_ID || 'cleanco-739468618342'
   });
   console.log("Firestore berhasil terkoneksi!");
 } catch (error) {
