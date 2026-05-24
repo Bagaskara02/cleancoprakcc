@@ -4,6 +4,8 @@ import WorkerDashboard from './pages/WorkerDashboard';
 import OrderDetail from './pages/OrderDetail';
 import Chat from './pages/Chat';
 import Login from './pages/Login';
+import Notifications from './pages/Notifications';
+import { Bell } from 'lucide-react';
 import './index.css';
 
 function Navbar() {
@@ -21,6 +23,12 @@ function Navbar() {
         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-green-600">CleanCo Worker</span>
       </div>
       <div className="flex items-center gap-4">
+        <button 
+          onClick={() => navigate('/notifications')} 
+          className="relative p-2 text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          <Bell size={20} />
+        </button>
         <div className="text-right">
           <span className="text-sm font-medium text-gray-800 block">{workerData.name}</span>
           <button 
@@ -51,6 +59,7 @@ function App() {
             <Route path="/" element={isAuth() ? <WorkerDashboard /> : <Navigate to="/login" />} />
             <Route path="/order/:id" element={isAuth() ? <OrderDetail /> : <Navigate to="/login" />} />
             <Route path="/chat/:orderId" element={isAuth() ? <Chat /> : <Navigate to="/login" />} />
+            <Route path="/notifications" element={isAuth() ? <Notifications /> : <Navigate to="/login" />} />
           </Routes>
         </main>
       </div>
