@@ -9,8 +9,6 @@ export default function OrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState(state?.order || null);
   const [loading, setLoading] = useState(!order);
-  const [tracking, setTracking] = useState(false);
-  const [intervalId, setIntervalId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef(null);
   const [pendingAction, setPendingAction] = useState(null); // 'start' atau 'finish'
@@ -86,40 +84,21 @@ export default function OrderDetail() {
     }
   };
 
-  const toggleTracking = () => {
-    if (tracking) {
-      clearInterval(intervalId);
-      setIntervalId(null);
-      setTracking(false);
-      alert('Tracking GPS dihentikan');
-    } else {
-      alert('Tracking GPS dimulai! Mengirim lokasi setiap 5 detik (simulasi).');
-      setTracking(true);
-      // Dummy tracking (simulate movement)
-      let lat = -6.200000;
-      let long = 106.816666;
-      const id = setInterval(async () => {
-        lat += 0.0001;
-        long += 0.0001;
-        try {
-          await apiWorkerService.patch('/api/v2/tracking/location', {
-            workerId: WORKER_ID,
-            lat,
-            long
-          });
-        } catch (e) {
-          console.error("Gagal kirim tracking:", e);
-        }
-      }, 5000);
-      setIntervalId(id);
+  const logMicroAction = async (actionName, note) => {
+    try {
+      await apiUserOrder.post('/api/v1/order-history', {
+        orderId: order.id,
+        status: actionName,
+        updatedByRole: 'worker',
+        note: note,
+        photo_url: ''
+      });
+      alert(`Log "${note}" berhasil dicatat!`);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mencatat log waktu');
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [intervalId]);
 
   if (!order) return null;
 
@@ -152,17 +131,11 @@ export default function OrderDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-100">
             <button 
               onClick={() => navigate(`/chat/${order.id}`, { state: { order } })}
               className="flex items-center justify-center gap-2 bg-sky-50 text-sky-600 p-3 rounded-xl hover:bg-sky-100 transition-colors font-medium">
               <MessageSquare size={18} /> Chat Pelanggan
-            </button>
-            <button 
-              onClick={toggleTracking}
-              className={`flex items-center justify-center gap-2 p-3 rounded-xl transition-colors font-medium
-                ${tracking ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              <MapPin size={18} /> {tracking ? 'Hentikan GPS' : 'Mulai Tracking GPS'}
             </button>
           </div>
 
@@ -170,12 +143,27 @@ export default function OrderDetail() {
             <h3 className="font-bold text-gray-800 mb-4">Aksi Pekerjaan</h3>
             
             {order.status !== 'in_progress' && order.status !== 'completed' && (
-              <button 
-                onClick={() => triggerPhotoUpload('start')}
-                disabled={uploading}
-                className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-sky-500 to-sky-600'}`}>
-                <Camera size={20} /> {uploading && pendingAction === 'start' ? 'Mengupload...' : 'Mulai Pekerjaan & Foto Sebelum'}
-              </button>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button 
+                    onClick={() => logMicroAction('on_the_way', 'Petugas sedang dalam perjalanan menuju lokasi.')}
+                    className="flex items-center justify-center gap-2 bg-orange-50 text-orange-600 p-3 rounded-xl hover:bg-orange-100 transition-colors font-medium">
+                    <MapPin size={18} /> Catat: Berangkat
+                  </button>
+                  <button 
+                    onClick={() => logMicroAction('arrived', 'Petugas telah tiba di lokasi.')}
+                    className="flex items-center justify-center gap-2 bg-teal-50 text-teal-600 p-3 rounded-xl hover:bg-teal-100 transition-colors font-medium">
+                    <Check size={18} /> Catat: Tiba
+                  </button>
+                </div>
+                
+                <button 
+                  onClick={() => triggerPhotoUpload('start')}
+                  disabled={uploading}
+                  className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-sky-500 to-sky-600'}`}>
+                  <Camera size={20} /> {uploading && pendingAction === 'start' ? 'Mengupload...' : 'Mulai Pekerjaan & Foto Sebelum'}
+                </button>
+              </div>
             )}
 
             {order.status === 'in_progress' && (
