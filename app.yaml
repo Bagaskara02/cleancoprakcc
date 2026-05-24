@@ -1,0 +1,13 @@
+runtime: nodejs22
+service: frontend-worker
+
+handlers:
+# Menyajikan file aset statis (.css, .js, gambar, dll)
+- url: /(.*\..+)$
+  static_files: dist/\1
+  upload: dist/(.*\..+)$
+
+# Fallback ke index.html untuk routing SPA (React/Vite)
+- url: /.*
+  static_files: dist/index.html
+  upload: dist/index.html
