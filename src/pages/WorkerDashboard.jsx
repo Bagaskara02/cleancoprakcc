@@ -8,7 +8,8 @@ export default function WorkerDashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const WORKER_ID = 1; // Dummy worker ID for MVP
+  const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+  const WORKER_ID = workerData.id || 1;
 
   useEffect(() => {
     fetchOrders();

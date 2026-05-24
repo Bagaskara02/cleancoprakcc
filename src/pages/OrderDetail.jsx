@@ -12,7 +12,8 @@ export default function OrderDetail() {
   const [tracking, setTracking] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
   
-  const WORKER_ID = 1;
+  const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+  const WORKER_ID = workerData.id || 1;
 
   useEffect(() => {
     if (!order) {
