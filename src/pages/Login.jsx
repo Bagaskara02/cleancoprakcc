@@ -14,7 +14,7 @@ export default function Login() {
     // Hardcode autentikasi seperti permintaan (username: admin, password: admin123)
     if (username === 'admin' && password === 'admin123') {
       localStorage.setItem('adminToken', 'super-secret-admin-token');
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } else {
       setError('Username atau password salah!');
     }
