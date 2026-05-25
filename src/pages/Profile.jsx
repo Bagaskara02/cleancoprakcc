@@ -5,7 +5,6 @@ import {
   User, 
   Mail, 
   Phone, 
-  Briefcase, 
   LogOut, 
   Power,
   ShieldCheck
@@ -116,15 +115,6 @@ export default function Profile() {
               <div className="space-y-0.5">
                 <span className="text-[10px] text-text-muted font-bold uppercase block">Nomor Telepon</span>
                 <span className="text-sm font-semibold text-text block">{workerData.phone || '+62 812-3456-7890'}</span>
-              </div>
-            </div>
-
-            {/* Role */}
-            <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-border-light">
-              <Briefcase className="text-text-muted shrink-0" size={18} />
-              <div className="space-y-0.5">
-                <span className="text-[10px] text-text-muted font-bold uppercase block">Jabatan</span>
-                <span className="text-sm font-semibold text-text block">Mitra Pekerja Profesional</span>
               </div>
             </div>
 
