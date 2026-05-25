@@ -91,8 +91,8 @@ export default function History() {
   }
 
   const sortedOrders = [...completedOrders].sort((a, b) => {
-    const dateA = new Date(a.scheduled_at);
-    const dateB = new Date(b.scheduled_at);
+    const dateA = new Date(a.updated_at || a.scheduled_at);
+    const dateB = new Date(b.updated_at || b.scheduled_at);
     return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
   });
 
