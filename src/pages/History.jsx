@@ -88,6 +88,12 @@ export default function History() {
     return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  const getEndDate = (dateStr, durationMinutes) => {
+    const d = new Date(dateStr);
+    d.setMinutes(d.getMinutes() + (Number(durationMinutes) || 0));
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -206,7 +212,7 @@ export default function History() {
                           </div>
                           <div className="flex items-center gap-1.5 text-text-muted">
                             <Calendar size={12} className="text-text-muted" />
-                            {formatDate(order.scheduled_at)}
+                            {getEndDate(order.scheduled_at, order.duration_minutes)}
                           </div>
                         </div>
                       </td>
