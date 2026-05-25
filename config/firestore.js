@@ -20,9 +20,10 @@ try {
 
   admin.initializeApp({
     credential: credential,
-    projectId: process.env.PROJECT_ID || 'd-08-497210'
+    projectId: process.env.PROJECT_ID || 'd-08-497210',
+    storageBucket: process.env.STORAGE_BUCKET || 'd-08-497210.appspot.com'
   });
-  console.log("Firestore berhasil terkoneksi!");
+  console.log("Firestore & Storage berhasil terkoneksi!");
 } catch (error) {
   console.error("Gagal terhubung ke Firestore:", error.message);
 }
