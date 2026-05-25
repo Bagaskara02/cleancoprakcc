@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiUserOrder } from '../services/api';
+import { ShoppingBag, Wallet, RefreshCw, ArrowUpRight, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ totalOrders: 0, totalRevenue: 0, activeJobs: 0 });
@@ -17,26 +18,60 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Dashboard Monitoring</h2>
-      <p className="text-gray-500">Ringkasan aktivitas operasional CleanCo hari ini.</p>
+    <div className="space-y-8 font-sans">
+      {/* Header and Subtitle */}
+      <div>
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Monitoring</h1>
+        <p className="text-sm text-gray-500 mt-1.5">Ringkasan aktivitas operasional CleanCo hari ini</p>
+      </div>
       
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Total Pesanan Masuk</h3>
-          <p className="text-3xl font-bold text-gray-800 mt-2">{stats.totalOrders}</p>
+        {/* Card 1: Total Pesanan Masuk */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 flex justify-between items-start shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+          <div className="space-y-2">
+            <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase block">
+              Total Pesanan Masuk
+            </span>
+            <span className="text-4xl font-extrabold text-gray-800 block">
+              {stats.totalOrders}
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
+            <ShoppingBag size={22} />
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-green-500">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Total Pendapatan</h3>
-          <p className="text-3xl font-bold text-gray-800 mt-2">Rp {stats.totalRevenue.toLocaleString('id-ID')}</p>
+        {/* Card 2: Total Pendapatan */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 flex justify-between items-start shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+          <div className="space-y-2">
+            <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase block">
+              Total Pendapatan
+            </span>
+            <span className="text-3xl font-extrabold text-gray-800 block">
+              Rp {stats.totalRevenue.toLocaleString('id-ID')}
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0 shadow-inner">
+            <Wallet size={22} />
+          </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-yellow-500">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase">Pekerjaan Berjalan (In Progress)</h3>
-          <p className="text-3xl font-bold text-gray-800 mt-2">{stats.activeJobs}</p>
+        {/* Card 3: Pekerjaan Berjalan */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 flex justify-between items-start shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200">
+          <div className="space-y-2">
+            <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase block">
+              Pekerjaan Berjalan
+            </span>
+            <span className="text-4xl font-extrabold text-gray-800 block">
+              {stats.activeJobs}
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 shadow-inner">
+            <RefreshCw size={22} className="animate-spin-slow" />
+          </div>
         </div>
       </div>
     </div>
   );
-}
+}

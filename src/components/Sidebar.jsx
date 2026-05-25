@@ -10,27 +10,35 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-4">
-      <h1 className="text-2xl font-bold text-blue-400 mb-8 px-4 mt-4">✨ CleanCo.</h1>
-      <nav className="space-y-2">
+    <aside className="w-64 bg-blue-800 text-white min-h-screen flex flex-col p-6 shadow-xl border-r border-blue-900/20">
+      {/* Brand Logo & Subtitle */}
+      <div className="mb-10 px-2 mt-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">CleanCo</h1>
+        <span className="text-[10px] font-bold tracking-widest text-blue-200 uppercase block mt-1">
+          ADMIN PANEL
+        </span>
+      </div>
+
+      {/* Navigation Menus */}
+      <nav className="space-y-1.5 flex-1">
         {menus.map((m) => (
-          <NavLink key={m.path} to={m.path} className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-blue-600' : 'hover:bg-slate-800 text-slate-400'}`}>
-            {m.icon} <span>{m.name}</span>
+          <NavLink
+            key={m.path}
+            to={m.path}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                isActive
+                  ? 'bg-blue-700 text-white shadow-md'
+                  : 'text-blue-100 hover:bg-blue-700/40 hover:text-white'
+              }`
+            }
+          >
+            <span className="opacity-90">{m.icon}</span>
+            <span>{m.name}</span>
           </NavLink>
         ))}
       </nav>
-      
-      <div className="absolute bottom-4 w-56">
-        <button 
-          onClick={() => {
-            localStorage.removeItem('adminToken');
-            window.location.href = '/login';
-          }}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-left text-red-400 hover:bg-slate-800 transition-colors"
-        >
-          <LogOut size={20} /> <span>Keluar</span>
-        </button>
-      </div>
     </aside>
   );
 }
+
