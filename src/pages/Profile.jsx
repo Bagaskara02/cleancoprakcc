@@ -42,7 +42,16 @@ export default function Profile() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    alert('Perubahan disimpan!');
+    if (userId) {
+      apiUserOrder.put(`/api/v1/users/${userId}`, formData)
+        .then(res => {
+          alert('Perubahan disimpan!');
+        })
+        .catch(err => {
+          console.error("Gagal menyimpan perubahan:", err);
+          alert('Gagal menyimpan perubahan. Silakan coba lagi.');
+        });
+    }
   };
 
   const getInitial = () => {
