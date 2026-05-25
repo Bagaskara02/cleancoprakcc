@@ -143,7 +143,8 @@ export default function WorkerDashboard() {
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '0.0';
 
-  const hoursWorkedToday = completedToday.length * 1.5;
+  const totalMinutesWorkedToday = completedToday.reduce((sum, o) => sum + (Number(o.duration_minutes) || 0), 0);
+  const hoursWorkedToday = parseFloat((totalMinutesWorkedToday / 60).toFixed(1));
 
   const getServiceDetails = (serviceName) => {
     const name = (serviceName || '').toLowerCase();
