@@ -21,19 +21,23 @@ export default function Workers() {
   };
 
   useEffect(() => {
-    fetchWorkers();
+    fetchWorkers(true);
+    const interval = setInterval(() => {
+      fetchWorkers(false);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchWorkers = async () => {
+  const fetchWorkers = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await apiWorkerService.get('/workers');
       setWorkers(res.data);
     } catch (err) {
       console.error(err);
-      alert('Gagal mengambil data worker');
+      if (showLoading) alert('Gagal mengambil data worker');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -106,6 +110,7 @@ export default function Workers() {
             <option value="all">Semua Status</option>
             <option value="available">Available</option>
             <option value="busy">Busy</option>
+            <option value="offline">Offline</option>
           </select>
           <span className="text-xs text-gray-400 font-medium">
             Menampilkan {filteredWorkers.length} pekerja
@@ -281,6 +286,7 @@ export default function Workers() {
                   >
                     <option value="available">AVAILABLE</option>
                     <option value="busy">BUSY</option>
+                    <option value="offline">OFFLINE</option>
                   </select>
                 </div>
               )}

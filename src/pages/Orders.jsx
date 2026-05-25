@@ -16,9 +16,35 @@ export default function Orders() {
   const [payment, setPayment] = useState(null);
 
   useEffect(() => {
-    fetchOrders();
     fetchWorkers();
+    fetchOrders(true);
+
+    const interval = setInterval(() => {
+      fetchOrders(false);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  // Polling for detail modal data
+  useEffect(() => {
+    if (!selectedOrder) return;
+
+    const refreshModalData = async () => {
+      try {
+        const histRes = await apiUserOrder.get(`/order-history/${selectedOrder.id}`);
+        setHistory(histRes.data);
+      } catch (e) { /* ignore 404 */ }
+      
+      try {
+        const payRes = await apiUserOrder.get(`/payments/order/${selectedOrder.id}`);
+        setPayment(payRes.data);
+      } catch (e) { /* ignore 404 */ }
+    };
+
+    const interval = setInterval(refreshModalData, 5000);
+    return () => clearInterval(interval);
+  }, [selectedOrder]);
 
   const fetchWorkers = async () => {
     try {
@@ -29,15 +55,15 @@ export default function Orders() {
     }
   };
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const fetchOrders = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const res = await apiUserOrder.get('/orders');
       setOrders(res.data);
     } catch (err) {
       console.error('Gagal mengambil pesanan:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -120,6 +146,8 @@ export default function Orders() {
         return 'bg-emerald-50 text-emerald-700 border-emerald-200/50';
       case 'pending':
         return 'bg-amber-50 text-amber-700 border-amber-200/50';
+      case 'paid':
+        return 'bg-cyan-50 text-cyan-700 border-cyan-200/50';
       case 'accepted':
         return 'bg-blue-50 text-blue-700 border-blue-200/50';
       case 'in_progress':
@@ -298,7 +326,7 @@ export default function Orders() {
                   </div>
 
                   {/* Worker Assignment Section */}
-                  {selectedOrder.status === 'pending' && (
+                  {(selectedOrder.status === 'pending' || selectedOrder.status === 'paid') && (
                     <div className="pt-4 border-t border-gray-50 space-y-3">
                       {(!payment || payment.status === 'pending') && (
                         <div className="bg-amber-50 text-amber-800 border border-amber-100 p-3 rounded-lg text-xs flex gap-2">
