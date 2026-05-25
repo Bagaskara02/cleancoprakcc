@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiUserOrder } from '../services/api';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -31,39 +33,71 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-container" style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Masuk ke CleanCo</h2>
-      {error && <div style={{ color: 'red', marginBottom: '10px', textAlign: 'center' }}>{error}</div>}
-      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-          <input 
-            type="email" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="contoh@email.com"
-          />
+    <div className="auth-page">
+      <div className="auth-image-panel">
+        <div className="auth-brand">
+          <h1>CleanCo</h1>
+          <p>Kebersihan Profesional.</p>
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Password</label>
-          <input 
-            type="password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="Masukkan password Anda"
-          />
+        <p className="auth-image-text">
+          Rasakan standar kebersihan tertinggi yang dipadukan dengan keramahan premium. Terpercaya, efisien, dan bebas stres.
+        </p>
+      </div>
+      <div className="auth-form-panel">
+        <div className="auth-form-container">
+          <div className="auth-tabs">
+            <Link to="/login" className="auth-tab active">Masuk</Link>
+            <Link to="/register" className="auth-tab">Daftar</Link>
+          </div>
+          <h2 className="auth-heading">Selamat Datang Kembali</h2>
+          <p className="auth-subtext">Masukkan detail akun Anda untuk masuk.</p>
+          {error && <div className="auth-error">{error}</div>}
+          <form className="auth-form" onSubmit={handleLogin}>
+            <div className="form-group">
+              <label>Alamat Email</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><Mail size={18} /></span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="contoh@email.com"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Kata Sandi</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><Lock size={18} /></span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Masukkan kata sandi Anda"
+                />
+                <button
+                  type="button"
+                  className="input-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <div className="form-link">
+              <a href="#">Lupa kata sandi?</a>
+            </div>
+            <button type="submit" className="btn-auth" disabled={loading}>
+              {loading ? 'Memproses...' : 'Masuk'}
+            </button>
+          </form>
+          <p className="auth-footer-text">
+            Belum punya akun? <Link to="/register">Daftar di sini</Link>
+          </p>
         </div>
-        <button disabled={loading} type="submit" style={{ padding: '12px', backgroundColor: loading ? '#94a3b8' : '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}>
-          {loading ? 'Memproses...' : 'Login'}
-        </button>
-      </form>
-      <p style={{ textAlign: 'center', marginTop: '15px' }}>
-        Belum punya akun? <Link to="/register" style={{ color: '#0ea5e9' }}>Daftar di sini</Link>
-      </p>
+      </div>
     </div>
   );
 }

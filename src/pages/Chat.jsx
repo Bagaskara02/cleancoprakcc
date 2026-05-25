@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiUserOrder } from '../services/api';
+import { Send, ArrowLeft } from 'lucide-react';
 
 export default function Chat() {
   const location = useLocation();
@@ -44,6 +45,7 @@ export default function Chat() {
         orderId: order.id,
         senderId: userId,
         senderRole: 'user',
+        mix_blend_mode: 'normal', // Unrelated, just structure
         message: newMessage
       };
       await apiUserOrder.post('/api/v1/chats', payload);
@@ -58,44 +60,48 @@ export default function Chat() {
   if (!order) return null;
 
   return (
-    <div style={{ maxWidth: '600px', margin: '20px auto', display: 'flex', flexDirection: 'column', height: '80vh', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-      <div style={{ padding: '20px', borderBottom: '1px solid #eee', backgroundColor: '#f8fafc', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-        <h2 style={{ margin: 0 }}>Chat Pesanan #{order.id}</h2>
-        <p style={{ margin: '5px 0 0 0', color: '#64748b' }}>{order.service_name || 'Layanan Kebersihan'}</p>
-      </div>
+    <div className='chat-container-wrapper'>
+      <button className='btn-back-circle' onClick={() => navigate('/orders')}>
+        <ArrowLeft size={20} />
+      </button>
+      <div className='chat-page'>
+        <div className='chat-header'>
+          <h2>Chat Pesanan #{order.id}</h2>
+          <p>{order.service_name || 'Layanan Kebersihan'}</p>
+        </div>
 
-      <div style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {loading && messages.length === 0 ? (
-          <p style={{ textAlign: 'center' }}>Memuat obrolan...</p>
-        ) : messages.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#94a3b8' }}>Belum ada pesan. Mulai sapa petugas Anda!</p>
-        ) : (
-          messages.map((msg, idx) => {
-            const isMe = msg.senderRole === 'user' && msg.senderId === userId;
-            return (
-              <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', backgroundColor: isMe ? '#0ea5e9' : '#f1f5f9', color: isMe ? 'white' : 'black', padding: '10px 15px', borderRadius: '15px', maxWidth: '70%' }}>
-                <p style={{ margin: 0 }}>{msg.message}</p>
-                <span style={{ fontSize: '10px', opacity: 0.8, display: 'block', marginTop: '5px', textAlign: 'right' }}>
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            );
-          })
-        )}
-      </div>
+        <div className='chat-messages'>
+          {loading && messages.length === 0 ? (
+            <div className='loading-spinner'>Memuat obrolan...</div>
+          ) : messages.length === 0 ? (
+            <div className='empty-state'>Belum ada pesan. Mulai sapa petugas Anda!</div>
+          ) : (
+            messages.map((msg, idx) => {
+              const isMe = msg.senderRole === 'user' && msg.senderId === userId;
+              return (
+                <div key={idx} className={`chat-bubble ${isMe ? 'sent' : 'received'}`}>
+                  <p>{msg.message}</p>
+                  <span className='bubble-time'>
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
 
-      <form onSubmit={handleSendMessage} style={{ padding: '15px', borderTop: '1px solid #eee', display: 'flex', gap: '10px' }}>
-        <input 
-          type="text" 
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Ketik pesan..."
-          style={{ flex: 1, padding: '10px', borderRadius: '20px', border: '1px solid #ccc', outline: 'none' }}
-        />
-        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' }}>
-          Kirim
-        </button>
-      </form>
+        <form className='chat-input-bar' onSubmit={handleSendMessage}>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder='Ketik pesan...'
+          />
+          <button type='submit' className='chat-send-btn'>
+            <Send size={18} /> Kirim
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

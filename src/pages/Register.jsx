@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiUserOrder } from '../services/api';
+import { Mail, Lock, Eye, EyeOff, User, Phone, MapPin } from 'lucide-react';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export default function Register() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -36,76 +38,111 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-container" style={{ maxWidth: '500px', margin: '40px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Daftar Akun CleanCo</h2>
-      {error && <div style={{ color: 'red', marginBottom: '10px', textAlign: 'center' }}>{error}</div>}
-      <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Nama Lengkap</label>
-          <input 
-            type="text" 
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="Budi Santoso"
-          />
+    <div className="auth-page">
+      <div className="auth-image-panel">
+        <div className="auth-brand">
+          <h1>CleanCo</h1>
+          <p>Kebersihan Profesional.</p>
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-          <input 
-            type="email" 
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="budi@example.com"
-          />
+        <p className="auth-image-text">
+          Rasakan standar kebersihan tertinggi yang dipadukan dengan keramahan premium. Terpercaya, efisien, dan bebas stres.
+        </p>
+      </div>
+      <div className="auth-form-panel">
+        <div className="auth-form-container">
+          <div className="auth-tabs">
+            <Link to="/login" className="auth-tab">Masuk</Link>
+            <Link to="/register" className="auth-tab active">Daftar</Link>
+          </div>
+          <h2 className="auth-heading">Buat Akun Baru</h2>
+          <p className="auth-subtext">Lengkapi data diri Anda untuk mendaftar.</p>
+          {error && <div className="auth-error">{error}</div>}
+          <form className="auth-form" onSubmit={handleRegister}>
+            <div className="form-group">
+              <label>Nama Lengkap</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><User size={18} /></span>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Budi Santoso"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><Mail size={18} /></span>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="budi@example.com"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Kata Sandi</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><Lock size={18} /></span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="Minimal 6 karakter"
+                />
+                <button
+                  type="button"
+                  className="input-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Nomor Telepon</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><Phone size={18} /></span>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="081234567890"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Alamat</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><MapPin size={18} /></span>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required
+                  placeholder="Jl. Sudirman No. 1..."
+                ></textarea>
+              </div>
+            </div>
+            <button type="submit" className="btn-auth" disabled={loading}>
+              {loading ? 'Memproses...' : 'Daftar Sekarang'}
+            </button>
+          </form>
+          <p className="auth-footer-text">
+            Sudah punya akun? <Link to="/login">Login di sini</Link>
+          </p>
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Password</label>
-          <input 
-            type="password" 
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="Minimal 6 karakter"
-          />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Nomor Telepon</label>
-          <input 
-            type="tel" 
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-            required
-            placeholder="081234567890"
-          />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Alamat Lengkap</label>
-          <textarea 
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px' }}
-            required
-            placeholder="Jl. Sudirman No. 1..."
-          ></textarea>
-        </div>
-        <button disabled={loading} type="submit" style={{ padding: '12px', backgroundColor: loading ? '#94a3b8' : '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
-          {loading ? 'Memproses...' : 'Daftar Sekarang'}
-        </button>
-      </form>
-      <p style={{ textAlign: 'center', marginTop: '15px' }}>
-        Sudah punya akun? <Link to="/login" style={{ color: '#0ea5e9' }}>Login di sini</Link>
-      </p>
+      </div>
     </div>
   );
 }

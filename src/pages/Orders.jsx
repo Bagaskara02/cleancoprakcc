@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiUserOrder } from '../services/api';
-import { Clock } from 'lucide-react';
+import { Clock, MessageSquare } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function Orders() {
@@ -9,8 +9,9 @@ export default function Orders() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+  const [activeTab, setActiveTab] = useState('active');
   const navigate = useNavigate();
-  
+
   // Ambil userId dari localStorage
   const userId = localStorage.getItem('userId');
 
@@ -48,68 +49,92 @@ export default function Orders() {
       });
       alert('Terima kasih atas ulasan Anda!');
       setReviewModalOpen(false);
-      // Optional: refresh orders or just assume it's done
     } catch (err) {
       console.error(err);
       alert('Gagal mengirim ulasan.');
     }
   };
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'pending': return 'MENUNGGU PEMBAYARAN';
+      case 'paid': return 'SUDAH DIBAYAR';
+      case 'accepted': return 'DIKONFIRMASI';
+      case 'in_progress': return 'SEDANG DIKERJAKAN';
+      case 'completed': return 'SELESAI';
+      case 'cancelled': return 'DIBATALKAN';
+      default: return status?.toUpperCase() || 'UNKNOWN';
+    }
+  };
+
+  const filteredOrders = orders.filter(order => {
+    if (activeTab === 'active') {
+      return ['pending', 'accepted', 'in_progress', 'paid'].includes(order.status);
+    }
+    return ['completed', 'cancelled'].includes(order.status);
+  });
+
   if (!userId) {
     return (
-      <div className="orders-container">
-        <h2>Riwayat Pesanan Saya</h2>
-        <p>Anda belum login. Silakan <Link to="/login" style={{ color: '#0ea5e9' }}>login di sini</Link> untuk melihat riwayat pesanan Anda.</p>
+      <div className='orders-page'>
+        <h1>Pesanan Saya</h1>
+        <p>Anda belum login. Silakan <Link to="/login">login di sini</Link> untuk melihat riwayat pesanan Anda.</p>
       </div>
     );
   }
 
   return (
-    <div className="orders-container">
-      <h2>Riwayat Pesanan Saya</h2>
+    <div className='orders-page'>
+      <h1>Pesanan Saya</h1>
+      <p>Lacak status layanan pembersihan Anda saat ini dan riwayat sebelumnya.</p>
+
+      <div className='orders-tabs'>
+        <button className={`orders-tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Pesanan Aktif</button>
+        <button className={`orders-tab ${activeTab === 'completed' ? 'active' : ''}`} onClick={() => setActiveTab('completed')}>Riwayat Selesai</button>
+      </div>
+
       {loading ? (
         <p>Memuat pesanan...</p>
       ) : (
-        <div className="orders-list">
-          {orders.map(order => (
-            <div key={order.id} className="order-card">
-              <div className="order-header">
-                <h3>{order.service_name || 'Layanan Kebersihan'}</h3>
-                <span className={`badge ${order.status}`}>{order.status}</span>
+        <div className='orders-list'>
+          {filteredOrders.length === 0 && (
+            <p>Tidak ada pesanan untuk ditampilkan.</p>
+          )}
+          {filteredOrders.map(order => (
+            <div key={order.id} className='order-card'>
+              <div className='order-card-header'>
+                <div className='order-card-header-left'>
+                  <span className={`status-badge ${order.status}`}>{getStatusLabel(order.status)}</span>
+                  <h3>{order.service_name || 'Layanan Kebersihan'}</h3>
+                  <span className='order-id'>Order ID: #CLN-{order.id}</span>
+                </div>
+                <span className='order-price'>Rp {parseFloat(order.total_price).toLocaleString('id-ID')}</span>
               </div>
-              <div className="order-details">
-                <p><Clock size={14}/> {new Date(order.scheduled_at).toLocaleString('id-ID')}</p>
-                <p className="price">Total: Rp {parseFloat(order.total_price).toLocaleString('id-ID')}</p>
-                
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  {order.status === 'pending' && (
-                    <button 
-                      onClick={() => navigate('/payment', { state: { order } })}
-                      style={{ padding: '8px 16px', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                      Bayar Sekarang
-                    </button>
+
+              <div className='order-schedule'>
+                <span className='order-schedule-icon'><Clock size={18}/></span>
+                <div className='order-schedule-text'>
+                  <h5>{new Date(order.scheduled_at).toLocaleDateString('id-ID')}</h5>
+                  <p>{new Date(order.scheduled_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}</p>
+                </div>
+              </div>
+
+              <div className='order-card-footer'>
+                <div className='order-worker-info'>
+                  {order.worker_name && (
+                    <>
+                      <div className='worker-avatar'>{order.worker_name?.charAt(0)}</div>
+                      <div className='worker-details'>
+                        <h5>{order.worker_name}</h5>
+                      </div>
+                    </>
                   )}
-                  
-                  {order.status !== 'pending' && order.status !== 'cancelled' && (
-                    <button 
-                      onClick={() => navigate('/tracking', { state: { order } })}
-                      style={{ padding: '8px 16px', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                      Pantau Pekerjaan
-                    </button>
-                  )}
-                  
-                  <button 
-                    onClick={() => navigate('/chat', { state: { order } })}
-                    style={{ padding: '8px 16px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    Chat Pekerja
-                  </button>
-                  {order.status === 'completed' && (
-                    <button 
-                      onClick={() => handleOpenReview(order)}
-                      style={{ padding: '8px 16px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                      Beri Ulasan
-                    </button>
-                  )}
+                </div>
+                <div className='order-actions'>
+                  {order.status === 'pending' && <button className='btn-pay-now' onClick={() => navigate('/payment', { state: { order } })}>Bayar Sekarang</button>}
+                  {order.status !== 'pending' && order.status !== 'cancelled' && <button className='btn-track' onClick={() => navigate('/tracking', { state: { order } })}>Pantau</button>}
+                  <button className='btn-chat' onClick={() => navigate('/chat', { state: { order } })}>💬 Chat Pekerja</button>
+                  {order.status === 'completed' && <button className='btn-review' onClick={() => handleOpenReview(order)}>Beri Ulasan</button>}
                 </div>
               </div>
             </div>
@@ -119,17 +144,16 @@ export default function Orders() {
 
       {/* Modal Review */}
       {reviewModalOpen && selectedOrder && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ backgroundColor: '#fff', padding: '25px', borderRadius: '8px', width: '100%', maxWidth: '400px' }}>
-            <h3 style={{ marginTop: 0 }}>Beri Ulasan untuk Pekerja</h3>
-            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '15px' }}>{selectedOrder.service_name}</p>
-            <form onSubmit={submitReview} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className='modal-overlay'>
+          <div className='modal-content'>
+            <h3>Beri Ulasan untuk Pekerja</h3>
+            <p className='modal-subtitle'>{selectedOrder.service_name}</p>
+            <form className='modal-form' onSubmit={submitReview}>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Rating (1-5)</label>
-                <select 
-                  value={reviewData.rating} 
+                <label>Rating (1-5)</label>
+                <select
+                  value={reviewData.rating}
                   onChange={(e) => setReviewData({...reviewData, rating: parseInt(e.target.value)})}
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
                   <option value={5}>⭐⭐⭐⭐⭐ (5 - Sangat Baik)</option>
                   <option value={4}>⭐⭐⭐⭐ (4 - Baik)</option>
@@ -139,18 +163,17 @@ export default function Orders() {
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Komentar</label>
-                <textarea 
+                <label>Komentar</label>
+                <textarea
                   required
-                  value={reviewData.comment} 
+                  value={reviewData.comment}
                   onChange={(e) => setReviewData({...reviewData, comment: e.target.value})}
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px' }}
                   placeholder="Pekerjaannya sangat bersih dan cepat..."
                 ></textarea>
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setReviewModalOpen(false)} style={{ flex: 1, padding: '10px', backgroundColor: '#f1f5f9', color: '#334155', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Batal</button>
-                <button type="submit" style={{ flex: 1, padding: '10px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Kirim Ulasan</button>
+              <div className='modal-actions'>
+                <button type="button" className='btn-cancel' onClick={() => setReviewModalOpen(false)}>Batal</button>
+                <button type="submit" className='btn-submit'>Kirim Ulasan</button>
               </div>
             </form>
           </div>

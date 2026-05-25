@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiUserOrder, apiWorkerService } from '../services/api';
+import { ArrowLeft } from 'lucide-react';
 
 export default function Payment() {
-  // Dalam skenario asli, orderId dikirim via route /payment/:orderId
-  // Untuk MVP ini kita terima dari state atau set dummy
   const location = useLocation();
   const navigate = useNavigate();
   const { order } = location.state || {};
@@ -29,7 +28,7 @@ export default function Payment() {
     setLoading(true);
     try {
       let uploadedProofUrl = 'https://example.com/dummy-proof.jpg';
-      
+
       // Upload file jika ada
       if (proofFile) {
         const formData = new FormData();
@@ -47,7 +46,7 @@ export default function Payment() {
         payment_method: paymentMethod,
         proof_url: uploadedProofUrl
       });
-      
+
       // Kirim notifikasi
       const userId = localStorage.getItem('userId');
       if (userId) {
@@ -57,7 +56,7 @@ export default function Payment() {
           message: 'berhasil mengupload bukti pembayaran harap tunggu verifikasi dari admin'
         });
       }
-      
+
       alert('Pembayaran berhasil tunggu verifikasi dari admin');
       navigate('/orders');
     } catch (err) {
@@ -70,9 +69,9 @@ export default function Payment() {
 
   if (!order) {
     return (
-      <div style={{ textAlign: 'center', marginTop: '50px' }}>
+      <div className='payment-page payment-empty'>
         <h2>Pesanan tidak ditemukan.</h2>
-        <button onClick={() => navigate('/orders')} style={{ padding: '10px 20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        <button className='btn-back-orders' onClick={() => navigate('/orders')}>
           Kembali ke Riwayat Pesanan
         </button>
       </div>
@@ -80,44 +79,43 @@ export default function Payment() {
   }
 
   return (
-    <div style={{ maxWidth: '500px', margin: '40px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Selesaikan Pembayaran</h2>
-      
-      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '6px' }}>
-        <p style={{ margin: '0 0 5px 0' }}>Order ID: #{order.id}</p>
-        <p style={{ margin: '0 0 5px 0' }}>Layanan: {order.service_name || 'Layanan Kebersihan'}</p>
-        <p style={{ margin: '0', fontWeight: 'bold', fontSize: '18px', color: '#0ea5e9' }}>
-          Total Tagihan: Rp {parseFloat(order.total_price).toLocaleString('id-ID')}
-        </p>
+    <div className='payment-page'>
+      <button className='btn-back-circle' onClick={() => navigate('/orders')}>
+        <ArrowLeft size={20} />
+      </button>
+      <h1>Selesaikan Pembayaran</h1>
+      <div className='payment-card'>
+        <div className='payment-info'>
+          <p>Order ID: #{order.id}</p>
+          <p>Layanan: {order.service_name || 'Layanan Kebersihan'}</p>
+          <p className='payment-total'>Total: Rp {parseFloat(order.total_price).toLocaleString('id-ID')}</p>
+        </div>
+        <form className='payment-form' onSubmit={handlePayment}>
+          <div>
+            <label>Metode Pembayaran</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="Transfer Bank BCA">Transfer Bank BCA</option>
+              <option value="Transfer Bank Mandiri">Transfer Bank Mandiri</option>
+              <option value="GoPay">GoPay</option>
+              <option value="OVO">OVO</option>
+            </select>
+          </div>
+          <div>
+            <label>Upload Bukti Transfer</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+          </div>
+          <button type="submit" className='btn-confirm-pay' disabled={loading}>
+            {loading ? 'Memproses...' : 'Konfirmasi Pembayaran'}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handlePayment} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Metode Pembayaran</label>
-          <select 
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-          >
-            <option value="Transfer Bank BCA">Transfer Bank BCA</option>
-            <option value="Transfer Bank Mandiri">Transfer Bank Mandiri</option>
-            <option value="GoPay">GoPay</option>
-            <option value="OVO">OVO</option>
-          </select>
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Upload Bukti Transfer (Dari Galeri)</label>
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={handleFileChange}
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' }}
-          />
-        </div>
-        <button disabled={loading} type="submit" style={{ padding: '12px', backgroundColor: loading ? '#94a3b8' : '#22c55e', color: 'white', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
-          {loading ? 'Memproses...' : 'Konfirmasi Pembayaran'}
-        </button>
-      </form>
     </div>
   );
 }

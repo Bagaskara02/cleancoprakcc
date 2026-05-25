@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import Orders from './pages/Orders';
 import Login from './pages/Login';
@@ -10,6 +11,8 @@ import Payment from './pages/Payment';
 import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
 import Tracking from './pages/Tracking';
+import Profile from './pages/Profile';
+import Services from './pages/Services';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -23,22 +26,89 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      <div className="app-layout">
-        <Navbar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/tracking" element={<ProtectedRoute><Tracking /></ProtectedRoute>} />
-          </Routes>
-        </main>
-      </div>
+      <Routes>
+        {/* Auth routes - no navbar/footer */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Protected routes with navbar + footer */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Home /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/services" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Services /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Orders /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        } />
+        <Route path="/payment" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Payment /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Chat /></main>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Notifications /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/tracking" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Tracking /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <div className="app-layout">
+              <Navbar />
+              <main className="main-content"><Profile /></main>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+      </Routes>
     </Router>
   );
 }

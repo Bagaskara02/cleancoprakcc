@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiUserOrder } from '../services/api';
-import { MapPin, Image as ImageIcon, Clock } from 'lucide-react';
+import { Clock, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 
 export default function Tracking() {
   const location = useLocation();
   const navigate = useNavigate();
   const { order } = location.state || {};
-  
+
   const [historyLogs, setHistoryLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,57 +37,49 @@ export default function Tracking() {
   if (!order) return null;
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Pantau Pesanan #{order.id}</h2>
-      
+    <div className='tracking-page'>
+      <button className='btn-back-circle' onClick={() => navigate('/orders')}>
+        <ArrowLeft size={20} />
+      </button>
+      <h1>Pantau Pesanan #{order.id}</h1>
+
       {loading ? (
-        <p style={{ textAlign: 'center' }}>Memuat data...</p>
+        <div className='loading-spinner'>Memuat data...</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
-          {/* Bagian History & Foto Bukti Kerja */}
-          <div>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-              <Clock size={20} color="#22c55e" /> Log Waktu & Aktivitas
-            </h3>
-            
-            {historyLogs.length === 0 ? (
-              <p style={{ padding: '15px', backgroundColor: '#f8fafc', borderRadius: '8px', color: '#64748b' }}>
-                Belum ada riwayat aktivitas untuk pesanan ini.
-              </p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {historyLogs.map((log, idx) => (
-                  <div key={idx} style={{ padding: '15px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <span style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '14px', color: '#0ea5e9' }}>
-                        {log.status}
-                      </span>
-                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                        {new Date(log.timestamp).toLocaleTimeString('id-ID')}
-                      </span>
-                    </div>
-                    
-                    {log.note && <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}>{log.note}</p>}
-                    
-                    {log.photo_url && (
-                      <div style={{ marginTop: '10px' }}>
-                        <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <ImageIcon size={14} /> Foto Bukti
-                        </p>
-                        <img 
-                          src={log.photo_url} 
-                          alt="Bukti Kerja" 
-                          style={{ maxWidth: '100%', borderRadius: '4px', border: '1px solid #cbd5e1' }} 
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className='tracking-card'>
+          <div className='tracking-header'>
+            <Clock size={20} color='#22c55e' />
+            <h3>Log Waktu &amp; Aktivitas</h3>
           </div>
 
+          {historyLogs.length === 0 ? (
+            <div className='empty-state'>
+              Belum ada riwayat aktivitas untuk pesanan ini.
+            </div>
+          ) : (
+            <div className='timeline'>
+              {historyLogs.map((log, idx) => (
+                <div key={idx} className='timeline-item'>
+                  <div className='timeline-top'>
+                    <span className='timeline-status'>{log.status}</span>
+                    <span className='timeline-time'>
+                      {new Date(log.timestamp).toLocaleTimeString('id-ID')}
+                    </span>
+                  </div>
+
+                  {log.note && <p className='timeline-note'>{log.note}</p>}
+
+                  {log.photo_url && (
+                    <img
+                      src={log.photo_url}
+                      alt='Bukti'
+                      className='timeline-photo'
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
