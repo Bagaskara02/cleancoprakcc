@@ -23,9 +23,19 @@ const getUserByEmail = async (email) => {
     return rows[0];
 };
 
+const updateUser = async (id, name, email, phone, address) => {
+    return await db.query(
+        'UPDATE users SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?',
+        [name, email, phone, address, id]
+    );
+};
+
+
 module.exports = {
     getAllUsers,
     getUserById,
     createUser,
-    getUserByEmail
+    getUserByEmail,
+    updateUser
 };
+

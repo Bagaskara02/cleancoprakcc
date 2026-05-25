@@ -62,9 +62,24 @@ const loginUser = async (req, res) => {
     }
 };
 
+const updateUser = async (req, res) => {
+    try {
+        const { name, email, phone, address } = req.body;
+        const id = req.params.id;
+        
+        await userModel.updateUser(id, name, email, phone, address);
+        res.json({ message: "Profile berhasil diperbarui" });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal mengupdate user', detail: error.message });
+    }
+};
+
+
 module.exports = {
     getUsers,
     getUserById,
     addUser,
-    loginUser
+    loginUser,
+    updateUser
 };
+
