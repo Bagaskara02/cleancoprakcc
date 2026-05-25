@@ -111,7 +111,7 @@ export default function History() {
             <div>
               <span className="text-xs font-bold text-text-muted block uppercase tracking-wider mb-0.5">Pendapatan Hari Ini</span>
               <span className="text-2xl font-extrabold text-text block">
-                {formatPrice(earningsToday > 0 ? earningsToday : 450000)}
+                {formatPrice(earningsToday)}
               </span>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function History() {
             <div>
               <span className="text-xs font-bold text-text-muted block uppercase tracking-wider mb-0.5">Total Tugas Selesai</span>
               <span className="text-2xl font-extrabold text-text block">
-                {countToday > 0 ? `${countToday} Tugas` : '3 Tugas'}
+                {countToday} Tugas
               </span>
             </div>
           </div>

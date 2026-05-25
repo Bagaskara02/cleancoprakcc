@@ -138,14 +138,12 @@ export default function WorkerDashboard() {
   const completedToday = todayOrders.filter(o => o.status === 'completed');
   const earningsToday = completedToday.reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
 
-  // If worker is new (reviews.length === 0), average rating is '0.0' and working hours start from 0 (completedToday.length * 1.5)
+  // If worker is new (reviews.length === 0), average rating is '0.0' and working hours start from 0
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : '0.0';
 
-  const hoursWorkedToday = reviews.length === 0 
-    ? (completedToday.length * 1.5) 
-    : ((completedToday.length * 1.5) || 4.5);
+  const hoursWorkedToday = completedToday.length * 1.5;
 
   const getServiceDetails = (serviceName) => {
     const name = (serviceName || '').toLowerCase();
@@ -175,6 +173,20 @@ export default function WorkerDashboard() {
         photo_url
       });
       await fetchHistoryLogs(orderId);
+      
+      // If task is completed, make worker available again!
+      if (newStatus === 'completed') {
+        try {
+          await apiWorkerService.patch(`/api/v2/workers/${WORKER_ID}/status`, { status: 'available' });
+          const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+          workerData.status = 'available';
+          localStorage.setItem('workerData', JSON.stringify(workerData));
+          window.dispatchEvent(new Event('storage'));
+        } catch (statusErr) {
+          console.error("Gagal memperbarui status worker ke available:", statusErr);
+        }
+      }
+      
       fetchOrders();
       alert(`Berhasil memperbarui status menjadi: ${newStatus}`);
     } catch (err) {
@@ -193,7 +205,7 @@ export default function WorkerDashboard() {
         photo_url: ''
       });
       await fetchHistoryLogs(orderId);
-      if (actionName === 'arrived') {
+      if (actionName === 'on_the_way' || actionName === 'arrived') {
         try {
           await apiWorkerService.patch(`/api/v2/workers/${WORKER_ID}/status`, { status: 'busy' });
           const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
@@ -274,7 +286,7 @@ export default function WorkerDashboard() {
           <div className="min-w-0">
             <span className="text-[10px] lg:text-xs font-bold text-text-muted block uppercase tracking-wider mb-0.5 truncate">Pendapatan Hari Ini</span>
             <span className="text-lg lg:text-xl font-extrabold text-text block truncate">
-              {formatPrice(earningsToday > 0 ? earningsToday : 150000)}
+              {formatPrice(earningsToday)}
             </span>
           </div>
         </div>
@@ -287,7 +299,7 @@ export default function WorkerDashboard() {
           <div className="min-w-0">
             <span className="text-[10px] lg:text-xs font-bold text-text-muted block uppercase tracking-wider mb-0.5 truncate">Tugas Selesai</span>
             <span className="text-lg lg:text-xl font-extrabold text-text block truncate">
-              {todayOrders.length > 0 ? `${completedToday.length} / ${todayOrders.length}` : '2 / 5'}
+              {completedToday.length} / {todayOrders.length}
             </span>
           </div>
         </div>

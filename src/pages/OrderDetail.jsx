@@ -93,6 +93,21 @@ export default function OrderDetail() {
         photo_url: photo_url
       });
       await fetchHistoryLogs(order.id);
+      
+      // If task is completed, make worker available again!
+      if (newStatus === 'completed') {
+        try {
+          const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+          const WORKER_ID = workerData.id || 1;
+          await apiWorkerService.patch(`/api/v2/workers/${WORKER_ID}/status`, { status: 'available' });
+          workerData.status = 'available';
+          localStorage.setItem('workerData', JSON.stringify(workerData));
+          window.dispatchEvent(new Event('storage'));
+        } catch (statusErr) {
+          console.error("Gagal memperbarui status worker ke available:", statusErr);
+        }
+      }
+      
       setOrder({ ...order, status: newStatus });
       alert(`Berhasil memperbarui status menjadi: ${newStatus}`);
     } catch (err) {
@@ -111,7 +126,7 @@ export default function OrderDetail() {
         photo_url: ''
       });
       await fetchHistoryLogs(order.id);
-      if (actionName === 'arrived') {
+      if (actionName === 'on_the_way' || actionName === 'arrived') {
         try {
           const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
           const WORKER_ID = workerData.id || 1;
