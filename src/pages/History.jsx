@@ -78,6 +78,12 @@ export default function History() {
     return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const getEndTime = (dateStr, durationMinutes) => {
+    const d = new Date(dateStr);
+    d.setMinutes(d.getMinutes() + (Number(durationMinutes) || 0));
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  };
+
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   };
@@ -196,7 +202,7 @@ export default function History() {
                         <div className="space-y-0.5 text-xs">
                           <div className="flex items-center gap-1.5 font-bold">
                             <Clock size={12} className="text-text-muted" />
-                            {formatTime(order.scheduled_at)}
+                            {getEndTime(order.scheduled_at, order.duration_minutes)}
                           </div>
                           <div className="flex items-center gap-1.5 text-text-muted">
                             <Calendar size={12} className="text-text-muted" />
