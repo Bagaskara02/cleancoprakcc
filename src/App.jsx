@@ -54,18 +54,6 @@ function MainLayout({ children }) {
 
   if (!workerData) return <>{children}</>;
 
-  const handleToggleStatus = async () => {
-    const nextStatus = status === 'available' ? 'offline' : 'available';
-    try {
-      await apiWorkerService.patch(`/api/v2/workers/${workerData.id}/status`, { status: nextStatus });
-      const updatedData = { ...workerData, status: nextStatus };
-      localStorage.setItem('workerData', JSON.stringify(updatedData));
-      setStatus(nextStatus);
-    } catch (error) {
-      console.error("Gagal memperbarui status:", error);
-    }
-  };
-
   const handleToggleSidebar = () => {
     const nextCollapsed = !isSidebarCollapsed;
     setIsSidebarCollapsed(nextCollapsed);
@@ -243,18 +231,17 @@ function MainLayout({ children }) {
 
           <div className="flex items-center gap-3 lg:gap-6">
             
-            {/* Status Toggle Badge */}
-            <button
-              onClick={handleToggleStatus}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+            {/* Status Badge (Read-only, synchronized with profile page) */}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 select-none ${
                 status === 'available'
-                  ? 'bg-teal/10 border-teal/20 text-teal hover:bg-teal/15 shadow-sm shadow-teal/5'
-                  : 'bg-text-light/10 border-text-light/20 text-text-light hover:bg-text-light/15'
+                  ? 'bg-teal/10 border-teal/20 text-teal shadow-sm shadow-teal/5'
+                  : 'bg-text-light/10 border-text-light/20 text-text-light'
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${status === 'available' ? 'bg-teal' : 'bg-text-light'} animate-pulse`}></span>
               {status === 'available' ? 'Online' : 'Offline'}
-            </button>
+            </div>
 
             {/* Notification Bell */}
             <button
