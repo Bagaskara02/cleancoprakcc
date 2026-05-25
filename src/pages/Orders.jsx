@@ -12,6 +12,12 @@ export default function Orders() {
   const [activeTab, setActiveTab] = useState('active');
   const navigate = useNavigate();
 
+  // Chat modal state
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newChatMessage, setNewChatMessage] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+
   // Ambil userId dari localStorage
   const userId = localStorage.getItem('userId');
 
@@ -30,6 +36,55 @@ export default function Orders() {
       setLoading(false);
     });
   }, [userId]);
+
+  // Polling chat messages
+  useEffect(() => {
+    if (!chatModalOpen || !selectedOrder || !userId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const response = await apiUserOrder.get(`/api/v1/chats/${selectedOrder.id}`);
+        setChatMessages(response.data);
+      } catch (error) {
+        console.error('Gagal mengambil pesan:', error);
+      } finally {
+        setChatLoading(false);
+      }
+    };
+
+    setChatLoading(true);
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, [chatModalOpen, selectedOrder, userId]);
+
+  const handleOpenChat = (order) => {
+    setSelectedOrder(order);
+    setChatMessages([]);
+    setChatModalOpen(true);
+  };
+
+  const handleSendChatMessage = async (e) => {
+    e.preventDefault();
+    if (!newChatMessage.trim()) return;
+
+    try {
+      const payload = {
+        orderId: selectedOrder.id,
+        senderId: userId,
+        senderRole: 'user',
+        message: newChatMessage
+      };
+      await apiUserOrder.post('/api/v1/chats', payload);
+      setNewChatMessage('');
+      // Fetch messages immediately
+      const response = await apiUserOrder.get(`/api/v1/chats/${selectedOrder.id}`);
+      setChatMessages(response.data);
+    } catch (error) {
+      console.error('Gagal mengirim pesan:', error);
+      alert('Gagal mengirim pesan.');
+    }
+  };
 
   const handleOpenReview = (order) => {
     setSelectedOrder(order);
@@ -133,7 +188,7 @@ export default function Orders() {
                 <div className='order-actions'>
                   {order.status === 'pending' && <button className='btn-pay-now' onClick={() => navigate('/payment', { state: { order } })}>Bayar Sekarang</button>}
                   {order.status !== 'pending' && order.status !== 'cancelled' && <button className='btn-track' onClick={() => navigate('/tracking', { state: { order } })}>Pantau</button>}
-                  <button className='btn-chat' onClick={() => navigate('/chat', { state: { order } })}>💬 Chat Pekerja</button>
+                  <button className='btn-chat' onClick={() => handleOpenChat(order)}>💬 Chat Pekerja</button>
                   {order.status === 'completed' && <button className='btn-review' onClick={() => handleOpenReview(order)}>Beri Ulasan</button>}
                 </div>
               </div>
@@ -172,9 +227,59 @@ export default function Orders() {
                 ></textarea>
               </div>
               <div className='modal-actions'>
-                <button type="button" className='btn-cancel' onClick={() => setReviewModalOpen(false)}>Batal</button>
-                <button type="submit" className='btn-submit'>Kirim Ulasan</button>
+                <button type="button" className='btn-modal-cancel' onClick={() => setReviewModalOpen(false)}>Batal</button>
+                <button type="submit" className='btn-modal-submit'>Kirim Ulasan</button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Chat */}
+      {chatModalOpen && selectedOrder && (
+        <div className='modal-overlay'>
+          <div className='modal-content chat-modal-content'>
+            <div className='chat-modal-header'>
+              <div>
+                <h3>Chat dengan Petugas</h3>
+                <p className='modal-subtitle'>
+                  {selectedOrder.worker_name || 'Petugas Kebersihan'} - #{selectedOrder.id}
+                </p>
+              </div>
+              <button className='chat-modal-close' onClick={() => setChatModalOpen(false)}>×</button>
+            </div>
+
+            <div className='chat-modal-messages'>
+              {chatLoading && chatMessages.length === 0 ? (
+                <div className='chat-modal-spinner'>Memuat obrolan...</div>
+              ) : chatMessages.length === 0 ? (
+                <div className='chat-modal-empty'>Belum ada pesan. Mulai sapa petugas Anda!</div>
+              ) : (
+                chatMessages.map((msg, idx) => {
+                  const isMe = msg.senderRole === 'user' && msg.senderId === userId;
+                  return (
+                    <div key={idx} className={`chat-bubble ${isMe ? 'sent' : 'received'}`}>
+                      <p>{msg.message}</p>
+                      <span className='bubble-time'>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <form className='chat-modal-input-bar' onSubmit={handleSendChatMessage}>
+              <input
+                type="text"
+                value={newChatMessage}
+                onChange={(e) => setNewChatMessage(e.target.value)}
+                placeholder='Ketik pesan...'
+                required
+              />
+              <button type='submit' className='chat-modal-send-btn'>
+                Kirim
+              </button>
             </form>
           </div>
         </div>
