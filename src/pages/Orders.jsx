@@ -32,6 +32,14 @@ export default function Orders() {
 
     const refreshModalData = async () => {
       try {
+        const ordersRes = await apiUserOrder.get('/orders');
+        const updated = ordersRes.data.find(o => o.id === selectedOrder.id);
+        if (updated) {
+          setSelectedOrder(updated);
+        }
+      } catch (e) { /* ignore */ }
+
+      try {
         const histRes = await apiUserOrder.get(`/order-history/${selectedOrder.id}`);
         setHistory(histRes.data);
       } catch (e) { /* ignore 404 */ }
