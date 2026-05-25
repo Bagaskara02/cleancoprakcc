@@ -261,8 +261,7 @@ function MainLayout({ children }) {
             {/* Worker Avatar & Info */}
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/profile')}>
               <div className="text-right hidden sm:block">
-                <span className="text-sm font-bold text-text block leading-none mb-0.5">{workerData.name}</span>
-                <span className="text-xs text-text-muted block leading-none">Mitra Kebersihan</span>
+                <span className="text-sm font-bold text-text block leading-none">{workerData.name}</span>
               </div>
               <div className="w-9 h-9 rounded-full bg-primary-bg-deep border-2 border-primary-light flex items-center justify-center text-primary font-bold shadow-sm shadow-primary/10">
                 {workerData.name?.charAt(0).toUpperCase() || 'W'}
