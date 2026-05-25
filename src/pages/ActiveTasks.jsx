@@ -21,6 +21,10 @@ export default function ActiveTasks() {
 
   useEffect(() => {
     fetchActiveTasks();
+    const interval = setInterval(() => {
+      fetchActiveTasks();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchActiveTasks = async () => {

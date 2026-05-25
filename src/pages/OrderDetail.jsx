@@ -33,12 +33,10 @@ export default function OrderDetail() {
   const [chatOrder, setChatOrder] = useState(null);
 
   useEffect(() => {
-    if (!order) {
-      fetchOrderDetails();
-    } else {
-      fetchCustomerDetails(order.user_id);
-    }
-  }, [order]);
+    fetchOrderDetails();
+    const interval = setInterval(fetchOrderDetails, 5000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   // Fetch history logs when order updates
   useEffect(() => {
@@ -113,6 +111,18 @@ export default function OrderDetail() {
         photo_url: ''
       });
       await fetchHistoryLogs(order.id);
+      if (actionName === 'arrived') {
+        try {
+          const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+          const WORKER_ID = workerData.id || 1;
+          await apiWorkerService.patch(`/api/v2/workers/${WORKER_ID}/status`, { status: 'busy' });
+          workerData.status = 'busy';
+          localStorage.setItem('workerData', JSON.stringify(workerData));
+          window.dispatchEvent(new Event('storage'));
+        } catch (statusErr) {
+          console.error("Gagal memperbarui status worker ke busy:", statusErr);
+        }
+      }
       alert(`Log "${note}" berhasil dicatat!`);
     } catch (err) {
       console.error(err);
@@ -266,17 +276,19 @@ export default function OrderDetail() {
           </div>
 
           {/* Chat Button */}
-          <div className="pt-4 border-t border-border-custom">
-            <button 
-              onClick={() => {
-                setChatOrder(order);
-                setIsChatOpen(true);
-              }}
-              className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-text-secondary font-extrabold py-3.5 px-4 rounded-xl text-sm transition-colors cursor-pointer"
-            >
-              <MessageSquare size={18} /> Chat Pelanggan
-            </button>
-          </div>
+          {order.status !== 'completed' && order.status !== 'cancelled' && (
+            <div className="pt-4 border-t border-border-custom">
+              <button 
+                onClick={() => {
+                  setChatOrder(order);
+                  setIsChatOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-text-secondary font-extrabold py-3.5 px-4 rounded-xl text-sm transition-colors cursor-pointer"
+              >
+                <MessageSquare size={18} /> Chat Pelanggan
+              </button>
+            </div>
+          )}
 
           {/* Job Actions */}
           <div className="pt-4 border-t border-border-custom space-y-4">

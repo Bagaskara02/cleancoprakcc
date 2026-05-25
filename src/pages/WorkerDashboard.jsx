@@ -39,6 +39,12 @@ export default function WorkerDashboard() {
   useEffect(() => {
     fetchOrders();
     fetchReviews();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchReviews = async () => {
@@ -187,6 +193,17 @@ export default function WorkerDashboard() {
         photo_url: ''
       });
       await fetchHistoryLogs(orderId);
+      if (actionName === 'arrived') {
+        try {
+          await apiWorkerService.patch(`/api/v2/workers/${WORKER_ID}/status`, { status: 'busy' });
+          const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
+          workerData.status = 'busy';
+          localStorage.setItem('workerData', JSON.stringify(workerData));
+          window.dispatchEvent(new Event('storage'));
+        } catch (statusErr) {
+          console.error("Gagal memperbarui status worker ke busy:", statusErr);
+        }
+      }
       alert(`Log "${note}" berhasil dicatat!`);
     } catch (err) {
       console.error(err);
@@ -379,16 +396,18 @@ export default function WorkerDashboard() {
 
                 {/* Chat and Travel Status Logs Actions */}
                 <div className="pt-5 border-t border-border-custom flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={() => {
-                      setChatOrder(activeTask);
-                      setIsChatOpen(true);
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-text-secondary font-bold py-3 px-4 rounded-xl text-sm transition-colors cursor-pointer"
-                  >
-                    <MessageSquare size={16} />
-                    Chat Pelanggan
-                  </button>
+                  {activeTask.status !== 'completed' && activeTask.status !== 'cancelled' && (
+                    <button 
+                      onClick={() => {
+                        setChatOrder(activeTask);
+                        setIsChatOpen(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-text-secondary font-bold py-3 px-4 rounded-xl text-sm transition-colors cursor-pointer"
+                    >
+                      <MessageSquare size={16} />
+                      Chat Pelanggan
+                    </button>
+                  )}
 
                   {effectiveStatus !== 'in_progress' && (
                     <>

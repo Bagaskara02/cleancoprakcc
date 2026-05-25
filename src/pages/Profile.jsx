@@ -28,7 +28,25 @@ export default function Profile() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  useEffect(() => {
+    if (!workerData.id) return;
+    apiWorkerService.get(`/api/v2/workers/${workerData.id}`)
+      .then(res => {
+        const latest = res.data;
+        if (latest) {
+          const updated = { ...workerData, ...latest };
+          localStorage.setItem('workerData', JSON.stringify(updated));
+          setStatus(latest.status || 'available');
+        }
+      })
+      .catch(err => console.error("Gagal mengambil data worker terbaru:", err));
+  }, [workerData.id]);
+
   const handleToggleStatus = async () => {
+    if (status === 'busy') {
+      alert("Anda sedang dalam tugas aktif (Busy). Tidak dapat mengubah status menjadi Offline!");
+      return;
+    }
     const nextStatus = status === 'available' ? 'offline' : 'available';
     try {
       await apiWorkerService.patch(`/api/v2/workers/${workerData.id}/status`, { status: nextStatus });
@@ -137,11 +155,13 @@ export default function Profile() {
           className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-extrabold border transition-all cursor-pointer ${
             status === 'available'
               ? 'bg-teal/10 border-teal/20 text-teal hover:bg-teal/15 shadow-sm shadow-teal/5'
+              : status === 'busy'
+              ? 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200'
               : 'bg-text-light/10 border-text-light/20 text-text-light hover:bg-text-light/15'
           }`}
         >
           <Power size={16} />
-          {status === 'available' ? 'Aktif (Online)' : 'Nonaktif (Offline)'}
+          {status === 'busy' ? 'Sedang Bekerja (Busy)' : status === 'available' ? 'Aktif (Online)' : 'Nonaktif (Offline)'}
         </button>
       </div>
 

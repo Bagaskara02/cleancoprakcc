@@ -236,11 +236,15 @@ function MainLayout({ children }) {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 select-none ${
                 status === 'available'
                   ? 'bg-teal/10 border-teal/20 text-teal shadow-sm shadow-teal/5'
+                  : status === 'busy'
+                  ? 'bg-amber-100 border-amber-200 text-amber-700'
                   : 'bg-text-light/10 border-text-light/20 text-text-light'
               }`}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${status === 'available' ? 'bg-teal' : 'bg-text-light'} animate-pulse`}></span>
-              {status === 'available' ? 'Online' : 'Offline'}
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                status === 'available' ? 'bg-teal' : status === 'busy' ? 'bg-amber-500' : 'bg-text-light'
+              } animate-pulse`}></span>
+              {status === 'available' ? 'Online' : status === 'busy' ? 'Busy' : 'Offline'}
             </div>
 
             {/* Notification Bell */}
