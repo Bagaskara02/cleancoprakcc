@@ -8,12 +8,14 @@ import {
   Sparkles, 
   Flame, 
   Bookmark,
-  Calendar
+  Calendar,
+  ArrowUpDown
 } from 'lucide-react';
 
 export default function History() {
   const [completedOrders, setCompletedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState('desc');
 
   const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
   const WORKER_ID = workerData.id || 1;
@@ -27,8 +29,6 @@ export default function History() {
       const res = await apiUserOrder.get('/api/v1/orders');
       // Filter completed orders for this worker
       const filtered = res.data.filter(o => o.worker_id === WORKER_ID && o.status === 'completed');
-      // Sort by scheduled date descending
-      filtered.sort((a, b) => new Date(b.scheduled_at) - new Date(a.scheduled_at));
       setCompletedOrders(filtered);
     } catch (error) {
       console.error("Gagal mengambil riwayat order:", error);
@@ -90,6 +90,12 @@ export default function History() {
     );
   }
 
+  const sortedOrders = [...completedOrders].sort((a, b) => {
+    const dateA = new Date(a.scheduled_at);
+    const dateB = new Date(b.scheduled_at);
+    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+
   return (
     <div className="space-y-8 pb-16">
       
@@ -139,8 +145,15 @@ export default function History() {
       {/* History List Table / Card */}
       <div className="bg-white rounded-2xl border border-border-custom shadow-sm overflow-hidden">
         
-        <div className="px-6 py-5 border-b border-border-custom">
+        <div className="px-6 py-5 border-b border-border-custom flex justify-between items-center">
           <h3 className="font-extrabold text-text text-base">Riwayat Pekerjaan</h3>
+          <button 
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="flex items-center gap-2 text-xs font-bold text-text-muted hover:text-primary transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-border-light"
+          >
+            <ArrowUpDown size={14} />
+            {sortOrder === 'desc' ? 'Terbaru' : 'Terlama'}
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -160,7 +173,7 @@ export default function History() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom">
-                {completedOrders.map((order) => {
+                {sortedOrders.map((order) => {
                   const style = getServiceStyles(order.service_name);
                   const Icon = style.icon;
                   return (
