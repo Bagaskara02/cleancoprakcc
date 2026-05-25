@@ -10,11 +10,14 @@ export default function Payment() {
 
   const [paymentMethod, setPaymentMethod] = useState('Transfer Bank BCA');
   const [proofFile, setProofFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setProofFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setProofFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -22,6 +25,11 @@ export default function Payment() {
     e.preventDefault();
     if (!order) {
       alert("Tidak ada pesanan yang dipilih untuk dibayar.");
+      return;
+    }
+
+    if (!proofFile) {
+      alert("Harap upload bukti pembayaran terlebih dahulu!");
       return;
     }
 
@@ -104,13 +112,26 @@ export default function Payment() {
             </select>
           </div>
           <div>
-            <label>Upload Bukti Transfer</label>
+            <label>Upload Bukti Transfer <span style={{ color: '#ef4444' }}>*</span></label>
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
+              required
             />
           </div>
+          {previewUrl && (
+            <div className='payment-proof-preview' style={{ margin: '15px 0', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '8px' }}>Pratinjau Bukti Transfer:</p>
+              <div style={{ display: 'inline-block', borderRadius: '12px', overflow: 'hidden', border: '2px dashed #cbd5e1', padding: '4px' }}>
+                <img
+                  src={previewUrl}
+                  alt="Pratinjau Bukti"
+                  style={{ maxWidth: '100%', maxHeight: '180px', display: 'block', borderRadius: '8px' }}
+                />
+              </div>
+            </div>
+          )}
           <button type="submit" className='btn-confirm-pay' disabled={loading}>
             {loading ? 'Memproses...' : 'Konfirmasi Pembayaran'}
           </button>

@@ -30,7 +30,7 @@ export default function Tracking() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // refresh tiap 10 detik
+    const interval = setInterval(fetchData, 5000); // refresh tiap 5 detik
     return () => clearInterval(interval);
   }, [order, navigate]);
 

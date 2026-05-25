@@ -27,14 +27,20 @@ export default function Orders() {
       return;
     }
 
-    apiUserOrder.get(`/api/v1/orders/user/${userId}`).then(res => {
-      setOrders(res.data);
-      setLoading(false);
-    }).catch(err => {
-      console.error("Gagal mengambil pesanan:", err);
-      setOrders([]);
-      setLoading(false);
-    });
+    const fetchOrdersList = () => {
+      apiUserOrder.get(`/api/v1/orders/user/${userId}`).then(res => {
+        setOrders(res.data);
+        setLoading(false);
+      }).catch(err => {
+        console.error("Gagal mengambil pesanan:", err);
+        setOrders([]);
+        setLoading(false);
+      });
+    };
+
+    fetchOrdersList();
+    const interval = setInterval(fetchOrdersList, 5000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   // Polling chat messages
@@ -113,7 +119,7 @@ export default function Orders() {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'pending': return 'MENUNGGU PEMBAYARAN';
-      case 'paid': return 'SUDAH DIBAYAR';
+      case 'paid': return 'Menunggu Konfirmasi Admin';
       case 'accepted': return 'DIKONFIRMASI';
       case 'in_progress': return 'SEDANG DIKERJAKAN';
       case 'completed': return 'SELESAI';
@@ -188,7 +194,9 @@ export default function Orders() {
                 <div className='order-actions'>
                   {order.status === 'pending' && <button className='btn-pay-now' onClick={() => navigate('/payment', { state: { order } })}>Bayar Sekarang</button>}
                   {order.status !== 'pending' && order.status !== 'cancelled' && <button className='btn-track' onClick={() => navigate('/tracking', { state: { order } })}>Pantau</button>}
-                  <button className='btn-chat' onClick={() => handleOpenChat(order)}>💬 Chat Pekerja</button>
+                  {order.status !== 'completed' && order.status !== 'cancelled' && (
+                    <button className='btn-chat' onClick={() => handleOpenChat(order)}>💬 Chat Pekerja</button>
+                  )}
                   {order.status === 'completed' && <button className='btn-review' onClick={() => handleOpenReview(order)}>Beri Ulasan</button>}
                 </div>
               </div>
