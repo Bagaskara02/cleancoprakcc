@@ -21,6 +21,7 @@ export default function Orders() {
 
     const interval = setInterval(() => {
       fetchOrders(false);
+      fetchWorkers();
     }, 5000);
 
     return () => clearInterval(interval);
