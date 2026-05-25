@@ -253,6 +253,8 @@ img { max-width: 100%; }
   margin: 0.25rem 0;
 }
 
+
+
 /* ========================================
    FOOTER
    ======================================== */
@@ -2318,11 +2320,44 @@ img { max-width: 100%; }
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 1.25rem;
+    padding: 0.75rem 1.25rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    height: auto;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .nav-brand {
+    order: 1;
+  }
+
+  .nav-right {
+    order: 2;
   }
 
   .nav-center {
-    display: none;
+    order: 3;
+    display: flex !important;
+    width: 100% !important;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--border-light);
+    padding-top: 0.5rem;
+    margin-top: 0.25rem;
+    gap: 0;
+  }
+
+  .nav-link {
+    height: auto;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-link.active::after {
+    bottom: -6px;
+    left: 0.75rem;
+    right: 0.75rem;
   }
 
   .services-grid {
@@ -2360,6 +2395,81 @@ img { max-width: 100%; }
 
   .active-order-right {
     justify-content: space-between;
+  }
+
+  /* Order actions stacking responsively */
+  .order-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .order-worker-info {
+    width: 100%;
+  }
+
+  .order-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .order-actions button {
+    flex: 1 1 calc(50% - 0.25rem);
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  /* Premium Bottom-sheet Modal styling on mobile */
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .chat-modal-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 75dvh !important;
+    height: 75vh !important;
+    max-height: 75dvh !important;
+    overflow: hidden !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    padding: 1.25rem !important;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 20px)) !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  /* Stepper adjustments for compact mobile screens */
+  .stepper {
+    padding: 1rem 0;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+  }
+
+  .step-line {
+    margin-top: -1.2rem;
   }
 }
 
