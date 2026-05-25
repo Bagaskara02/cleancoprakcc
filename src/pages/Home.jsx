@@ -83,7 +83,7 @@ export default function Home() {
                   <IconComponent size={28} />
                 </div>
                 <h3>{service.name}</h3>
-                <p className='service-price'>Mulai dari Rp {service.price.toLocaleString('id-ID')}</p>
+                <p className='service-price'>Mulai dari Rp {parseFloat(service.price).toLocaleString('id-ID')}</p>
                 <button className='btn-service' onClick={() => handleOrder(service)}>Pesan Sekarang</button>
               </div>
             );
