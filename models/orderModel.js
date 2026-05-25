@@ -3,7 +3,7 @@ const db = require('../config/database');
 // Sesuai tabel 'orders' di cleanco_schema.sql
 const getAllOrders = async () => {
     const [rows] = await db.query(`
-        SELECT o.*, u.name AS user_name, s.name AS service_name, w.name AS worker_name
+        SELECT o.*, u.name AS user_name, s.name AS service_name, s.duration_minutes, w.name AS worker_name
         FROM orders o
         LEFT JOIN users u ON o.user_id = u.id
         LEFT JOIN services s ON o.service_id = s.id
@@ -15,7 +15,7 @@ const getAllOrders = async () => {
 
 const getOrdersByUserId = async (user_id) => {
     const [rows] = await db.query(`
-        SELECT o.*, s.name AS service_name, w.name AS worker_name
+        SELECT o.*, s.name AS service_name, s.duration_minutes, w.name AS worker_name
         FROM orders o
         LEFT JOIN services s ON o.service_id = s.id
         LEFT JOIN workers w ON o.worker_id = w.id
