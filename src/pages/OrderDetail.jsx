@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiUserOrder, apiWorkerService } from '../services/api';
-import { Camera, MapPin, MessageSquare, Check, ArrowLeft } from 'lucide-react';
+import ChatModal from '../components/ChatModal';
+import { 
+  Camera, 
+  MapPin, 
+  MessageSquare, 
+  Check, 
+  ArrowLeft, 
+  Clock, 
+  Phone, 
+  User, 
+  Navigation,
+  CheckCircle,
+  Briefcase
+} from 'lucide-react';
 
 export default function OrderDetail() {
   const { state } = useLocation();
@@ -9,26 +22,71 @@ export default function OrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState(state?.order || null);
   const [loading, setLoading] = useState(!order);
+  const [customer, setCustomer] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = React.useRef(null);
+  const [historyLogs, setHistoryLogs] = useState([]);
+  const fileInputRef = useRef(null);
   const [pendingAction, setPendingAction] = useState(null); // 'start' atau 'finish'
-  
-  const workerData = JSON.parse(localStorage.getItem('workerData') || '{}');
-  const WORKER_ID = workerData.id || 1;
+
+  // Chat modal state
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatOrder, setChatOrder] = useState(null);
 
   useEffect(() => {
     if (!order) {
-      // Boleh ditambahkan fungsi fetch order by id
-      navigate('/');
+      fetchOrderDetails();
+    } else {
+      fetchCustomerDetails(order.user_id);
     }
-  }, [order, navigate]);
+  }, [order]);
+
+  // Fetch history logs when order updates
+  useEffect(() => {
+    if (order) {
+      fetchHistoryLogs(order.id);
+    }
+  }, [order]);
+
+  const fetchOrderDetails = async () => {
+    try {
+      const res = await apiUserOrder.get('/api/v1/orders');
+      const found = res.data.find(o => String(o.id) === String(id));
+      if (found) {
+        setOrder(found);
+        fetchCustomerDetails(found.user_id);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error(err);
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCustomerDetails = async (userId) => {
+    try {
+      const res = await apiUserOrder.get(`/api/v1/users/${userId}`);
+      setCustomer(res.data);
+    } catch (err) {
+      console.error("Gagal mengambil data pelanggan:", err);
+    }
+  };
+
+  const fetchHistoryLogs = async (orderId) => {
+    try {
+      const res = await apiUserOrder.get(`/api/v1/order-history/${orderId}`);
+      setHistoryLogs(res.data);
+    } catch (err) {
+      console.error("Gagal mengambil histori:", err);
+      setHistoryLogs([]);
+    }
+  };
 
   const updateStatus = async (newStatus, note, photo_url) => {
     try {
-      // 1. Update status order di SQL
       await apiUserOrder.patch(`/api/v1/orders/${order.id}/status`, { status: newStatus });
-      
-      // 2. Simpan history & foto ke Firestore
       await apiUserOrder.post('/api/v1/order-history', {
         orderId: order.id,
         status: newStatus,
@@ -36,7 +94,7 @@ export default function OrderDetail() {
         note: note,
         photo_url: photo_url
       });
-      
+      await fetchHistoryLogs(order.id);
       setOrder({ ...order, status: newStatus });
       alert(`Berhasil memperbarui status menjadi: ${newStatus}`);
     } catch (err) {
@@ -44,6 +102,24 @@ export default function OrderDetail() {
       alert('Gagal mengupdate status');
     }
   };
+
+  const logMicroAction = async (actionName, note) => {
+    try {
+      await apiUserOrder.post('/api/v1/order-history', {
+        orderId: order.id,
+        status: actionName,
+        updatedByRole: 'worker',
+        note: note,
+        photo_url: ''
+      });
+      await fetchHistoryLogs(order.id);
+      alert(`Log "${note}" berhasil dicatat!`);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mencatat log waktu');
+    }
+  };
+
 
   const triggerPhotoUpload = (actionType) => {
     setPendingAction(actionType);
@@ -61,7 +137,6 @@ export default function OrderDetail() {
       const formData = new FormData();
       formData.append('photo', file);
 
-      // Upload ke service-worker
       const uploadRes = await apiWorkerService.post('/api/v2/photos/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -79,118 +154,235 @@ export default function OrderDetail() {
     } finally {
       setUploading(false);
       setPendingAction(null);
-      // reset input value so the same file can be selected again if needed
       e.target.value = '';
     }
   };
 
-  const logMicroAction = async (actionName, note) => {
-    try {
-      await apiUserOrder.post('/api/v1/order-history', {
-        orderId: order.id,
-        status: actionName,
-        updatedByRole: 'worker',
-        note: note,
-        photo_url: ''
-      });
-      alert(`Log "${note}" berhasil dicatat!`);
-    } catch (err) {
-      console.error(err);
-      alert('Gagal mencatat log waktu');
+  // Determine effective status based on SQL order status & Firestore history logs
+  const getEffectiveStatus = () => {
+    if (!order) return '';
+    if (order.status === 'completed' || order.status === 'in_progress') {
+      return order.status;
     }
+    const hasArrivedLog = historyLogs.some(log => log.status === 'arrived');
+    if (hasArrivedLog) return 'arrived';
+    const hasOnTheWayLog = historyLogs.some(log => log.status === 'on_the_way');
+    if (hasOnTheWayLog) return 'on_the_way';
+    return order.status;
   };
 
-  if (!order) return null;
+  const effectiveStatus = getEffectiveStatus();
+
+  if (loading || !order) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors">
-        <ArrowLeft size={20} /> Kembali
+    <div className="max-w-2xl mx-auto space-y-6 pb-16">
+      
+      {/* Back navigation */}
+      <button 
+        onClick={() => navigate(-1)} 
+        className="flex items-center gap-2 text-text-secondary hover:text-text font-bold text-sm transition-colors cursor-pointer"
+      >
+        <ArrowLeft size={16} /> Kembali
       </button>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="font-bold text-gray-800 text-lg">Detail Tugas #{order.id}</h2>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold
-            ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
-              order.status === 'in_progress' ? 'bg-sky-100 text-sky-700' :
-              'bg-orange-100 text-orange-700'}`}>
-            {order.status.toUpperCase()}
+      {/* Main Task Detail Card */}
+      <div className="bg-white rounded-2xl border border-border-custom shadow-sm overflow-hidden border-t-4 border-t-primary">
+        
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-border-custom flex justify-between items-center bg-slate-50/50">
+          <div className="space-y-0.5">
+            <h2 className="font-extrabold text-text text-base">Detail Tugas</h2>
+            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block">ID Order #{order.id}</span>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold border
+            ${effectiveStatus === 'completed' ? 'bg-teal/10 border-teal/20 text-teal' :
+              effectiveStatus === 'in_progress' ? 'bg-primary-bg border-primary-light/20 text-primary' :
+              'bg-warning/10 border-warning/20 text-warning'}`}>
+            {effectiveStatus.toUpperCase()}
           </span>
         </div>
 
+        {/* Body */}
         <div className="p-6 space-y-6">
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Alamat Pelanggan</p>
-              <p className="font-medium text-gray-800">{order.address_detail}</p>
+          
+          {/* Details list */}
+          <div className="grid grid-cols-1 gap-5">
+            
+            {/* Customer Contact Card */}
+            <div className="bg-slate-50/70 border border-border-custom rounded-2xl p-5 space-y-3.5">
+              <span className="text-xs font-bold text-text uppercase tracking-wider block">Pelanggan</span>
+              
+              <div className="flex gap-4 items-start">
+                <div className="w-11 h-11 rounded-full bg-primary-bg-deep flex items-center justify-center text-primary font-bold shadow-sm shrink-0">
+                  {order.user_name?.charAt(0).toUpperCase() || 'P'}
+                </div>
+                
+                <div className="space-y-1">
+                  <span className="font-extrabold text-text block text-base">{order.user_name || 'Pelanggan'}</span>
+                  
+                  <span className="text-text-secondary text-sm flex items-center gap-1.5 font-semibold">
+                    <Phone size={14} className="text-text-muted" />
+                    {customer?.phone || '+62 812-3456-7890'}
+                  </span>
+
+                  <span className="text-text-secondary text-sm flex items-start gap-1.5 font-semibold leading-tight pt-0.5">
+                    <MapPin size={14} className="text-text-muted mt-0.5 shrink-0" />
+                    {order.address_detail}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Layanan</p>
-              <p className="font-medium text-gray-800">{order.service_name || `ID ${order.service_id}`}</p>
+
+            {/* Service & Time Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Service Details */}
+              <div className="p-4 rounded-xl border border-border-custom bg-slate-50/30">
+                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block mb-1">Layanan</span>
+                <span className="font-extrabold text-text text-sm flex items-center gap-1.5">
+                  <Briefcase size={16} className="text-primary shrink-0" />
+                  {order.service_name || `Layanan ID #${order.service_id}`}
+                </span>
+              </div>
+
+              {/* Time Details */}
+              <div className="p-4 rounded-xl border border-border-custom bg-slate-50/30">
+                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider block mb-1">Waktu Penjadwalan</span>
+                <span className="font-extrabold text-text text-sm flex items-center gap-1.5">
+                  <Clock size={16} className="text-primary shrink-0" />
+                  {new Date(order.scheduled_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })} - {new Date(order.scheduled_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                </span>
+              </div>
+
             </div>
+
           </div>
 
-          <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-100">
+          {/* Chat Button */}
+          <div className="pt-4 border-t border-border-custom">
             <button 
-              onClick={() => navigate(`/chat/${order.id}`, { state: { order } })}
-              className="flex items-center justify-center gap-2 bg-sky-50 text-sky-600 p-3 rounded-xl hover:bg-sky-100 transition-colors font-medium">
+              onClick={() => {
+                setChatOrder(order);
+                setIsChatOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-text-secondary font-extrabold py-3.5 px-4 rounded-xl text-sm transition-colors cursor-pointer"
+            >
               <MessageSquare size={18} /> Chat Pelanggan
             </button>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 space-y-3">
-            <h3 className="font-bold text-gray-800 mb-4">Aksi Pekerjaan</h3>
+          {/* Job Actions */}
+          <div className="pt-4 border-t border-border-custom space-y-4">
+            <h3 className="font-extrabold text-text text-sm">Log & Aksi Pekerjaan</h3>
             
-            {order.status !== 'in_progress' && order.status !== 'completed' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 mb-4">
+            {effectiveStatus !== 'in_progress' && effectiveStatus !== 'completed' && (
+              <div className="space-y-4">
+                
+                {/* Travel Logging */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Berangkat (Perjalanan) */}
                   <button 
                     onClick={() => logMicroAction('on_the_way', 'Petugas sedang dalam perjalanan menuju lokasi.')}
-                    className="flex items-center justify-center gap-2 bg-orange-50 text-orange-600 p-3 rounded-xl hover:bg-orange-100 transition-colors font-medium">
-                    <MapPin size={18} /> Catat: Berangkat
+                    disabled={effectiveStatus === 'on_the_way' || effectiveStatus === 'arrived'}
+                    className={`flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-xl text-xs transition-colors
+                      ${effectiveStatus === 'on_the_way' 
+                        ? 'bg-orange-500 text-white border border-orange-500 cursor-default' 
+                        : effectiveStatus === 'arrived'
+                          ? 'bg-slate-100 border border-border-custom text-text-muted cursor-not-allowed'
+                          : 'bg-orange-50 hover:bg-orange-100 border border-orange-100 text-orange-600 cursor-pointer'}`}
+                  >
+                    <MapPin size={16} />
+                    {effectiveStatus === 'on_the_way' ? 'Berangkat (Aktif)' : effectiveStatus === 'arrived' ? 'Berangkat (Selesai)' : 'Berangkat'}
                   </button>
+
+                  {/* Tiba */}
                   <button 
                     onClick={() => logMicroAction('arrived', 'Petugas telah tiba di lokasi.')}
-                    className="flex items-center justify-center gap-2 bg-teal-50 text-teal-600 p-3 rounded-xl hover:bg-teal-100 transition-colors font-medium">
-                    <Check size={18} /> Catat: Tiba
+                    disabled={effectiveStatus !== 'on_the_way'}
+                    title={effectiveStatus !== 'on_the_way' && effectiveStatus !== 'arrived' ? 'Anda harus Berangkat terlebih dahulu' : ''}
+                    className={`flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-xl text-xs transition-colors
+                      ${effectiveStatus === 'arrived'
+                        ? 'bg-teal text-white border border-teal cursor-default'
+                        : effectiveStatus === 'on_the_way'
+                          ? 'bg-teal/5 hover:bg-teal/10 border border-teal/10 text-teal cursor-pointer'
+                          : 'bg-slate-100 border border-border-custom text-slate-300 cursor-not-allowed'}`}
+                  >
+                    <Check size={16} />
+                    {effectiveStatus === 'arrived' ? 'Tiba (Aktif)' : 'Tiba di Lokasi'}
                   </button>
                 </div>
                 
-                <button 
-                  onClick={() => triggerPhotoUpload('start')}
-                  disabled={uploading}
-                  className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-sky-500 to-sky-600'}`}>
-                  <Camera size={20} /> {uploading && pendingAction === 'start' ? 'Mengupload...' : 'Mulai Pekerjaan & Foto Sebelum'}
-                </button>
+                {/* Start job */}
+                {effectiveStatus === 'arrived' ? (
+                  <button 
+                    onClick={() => triggerPhotoUpload('start')}
+                    disabled={uploading}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark disabled:bg-primary/50 text-white font-extrabold py-4 px-6 rounded-2xl shadow-md transition-all text-sm cursor-pointer"
+                  >
+                    <Camera size={18} />
+                    {uploading && pendingAction === 'start' ? 'Mengupload Foto...' : 'Mulai Pekerjaan & Foto Sebelum'}
+                  </button>
+                ) : (
+                  <div 
+                    className="w-full flex items-center justify-center gap-2 bg-slate-200 text-slate-400 font-extrabold py-4 px-6 rounded-2xl border border-slate-300/10 text-sm cursor-not-allowed text-center"
+                    title="Anda harus mencatat 'Tiba' terlebih dahulu sebelum dapat memulai pekerjaan"
+                  >
+                    <Camera size={18} />
+                    Mulai Pekerjaan & Foto Sebelum (Terkunci)
+                  </div>
+                )}
               </div>
             )}
 
-            {order.status === 'in_progress' && (
+            {effectiveStatus === 'in_progress' && (
+              /* Finish job */
               <button 
                 onClick={() => triggerPhotoUpload('finish')}
                 disabled={uploading}
-                className={`w-full flex items-center justify-center gap-2 text-white p-4 rounded-xl hover:shadow-lg transition-all font-bold ${uploading ? 'bg-gray-400' : 'bg-gradient-to-r from-green-500 to-green-600'}`}>
-                <Check size={20} /> {uploading && pendingAction === 'finish' ? 'Mengupload...' : 'Selesaikan Pekerjaan & Foto Sesudah'}
+                className="w-full flex items-center justify-center gap-2 bg-teal hover:bg-teal-dark disabled:bg-teal/50 text-white font-extrabold py-4 px-6 rounded-2xl shadow-md transition-all text-sm cursor-pointer"
+              >
+                <Camera size={18} />
+                {uploading && pendingAction === 'finish' ? 'Mengupload Foto...' : 'Selesaikan Pekerjaan & Foto Sesudah'}
               </button>
             )}
 
-            {order.status === 'completed' && (
-              <div className="bg-green-50 text-green-700 p-4 rounded-xl text-center font-medium border border-green-100">
+            {effectiveStatus === 'completed' && (
+              /* Job complete success notification */
+              <div className="bg-teal/10 border border-teal/20 text-teal p-4 rounded-xl text-center font-bold text-sm flex items-center justify-center gap-2">
+                <CheckCircle size={18} />
                 Tugas ini telah selesai dengan sukses! 🎉
               </div>
             )}
+
           </div>
+
         </div>
+
       </div>
 
+      {/* Invisible file input for photo uploads */}
       <input 
         type="file" 
         accept="image/*" 
         ref={fileInputRef} 
         onChange={handleFileChange} 
-        style={{ display: 'none' }} 
+        className="hidden" 
       />
+
+      {/* Pop-up ChatModal matching fe-user-cleanco style */}
+      <ChatModal 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        order={chatOrder} 
+      />
+
     </div>
   );
 }

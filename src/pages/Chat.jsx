@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { apiUserOrder } from '../services/api';
-import { ArrowLeft, Send, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Send, MessageSquare, Clock } from 'lucide-react';
 
 export default function Chat() {
   const { state } = useLocation();
@@ -28,14 +28,14 @@ export default function Chat() {
         const response = await apiUserOrder.get(`/api/v1/chats/${order.id}`);
         setMessages(response.data);
       } catch (error) {
-        console.error('Gagal mengambil pesan', error, error.response?.data?.detail);
+        console.error('Gagal mengambil pesan', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMessages();
-    // Simulate real-time by polling every 5 seconds (untuk MVP)
+    // Poll every 5 seconds for simulation
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
   }, [order, navigate]);
@@ -60,43 +60,59 @@ export default function Chat() {
       // Optimistic update
       setMessages([...messages, { ...payload, timestamp: new Date().toISOString() }]);
     } catch (error) {
-      const detail = error.response?.data?.detail || '';
       console.error('Gagal mengirim pesan', error);
-      alert(`Gagal mengirim pesan. ${detail}`);
+      alert(`Gagal mengirim pesan.`);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-800">
-          <ArrowLeft size={20} />
+    <div className="flex flex-col h-[calc(100vh-120px)] lg:h-[calc(100vh-140px)] bg-white rounded-2xl shadow-sm border border-border-custom overflow-hidden">
+      
+      {/* Title Header */}
+      <div className="bg-slate-50/50 px-6 py-4 border-b border-border-custom flex items-center gap-4 shrink-0">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="text-text-secondary hover:text-text p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={18} />
         </button>
         <div>
-          <h2 className="font-bold text-gray-800">Chat dengan Pelanggan</h2>
-          <p className="text-xs text-gray-500">Order #{order.id} - {order.service_name}</p>
+          <h2 className="font-extrabold text-text text-base leading-none mb-1">Chat Pelanggan</h2>
+          <p className="text-xs font-semibold text-text-muted">
+            Order #{order.id} — {order.service_name || `Layanan ID #${order.service_id}`}
+          </p>
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto bg-slate-50 flex flex-col gap-4">
+      {/* Message Bubbles Area */}
+      <div className="flex-1 p-6 overflow-y-auto bg-slate-50/30 flex flex-col gap-4">
         {loading && messages.length === 0 ? (
           <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <MessageSquare size={48} className="mb-2 opacity-20" />
-            <p>Belum ada pesan. Sapa pelanggan Anda!</p>
+          <div className="flex flex-col items-center justify-center h-full text-center max-w-sm mx-auto">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-text-muted mb-4 opacity-70">
+              <MessageSquare size={24} />
+            </div>
+            <h4 className="font-extrabold text-text text-base">Belum ada pesan</h4>
+            <p className="text-xs text-text-muted font-semibold mt-1">Kirim pesan pertama Anda untuk menyapa pelanggan.</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
-            const isMe = msg.senderRole === 'worker' && msg.senderId === WORKER_ID;
+            const isMe = msg.senderRole === 'worker' && String(msg.senderId) === WORKER_ID;
             return (
-              <div key={idx} className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                isMe ? 'bg-sky-500 text-white self-end rounded-tr-sm' : 'bg-white text-gray-800 border border-gray-100 self-start rounded-tl-sm shadow-sm'
-              }`}>
-                <p className="text-sm">{msg.message}</p>
-                <span className={`text-[10px] mt-1 block ${isMe ? 'text-sky-100 text-right' : 'text-gray-400'}`}>
+              <div 
+                key={idx} 
+                className={`max-w-[75%] rounded-2xl px-4 py-3 flex flex-col gap-1 shadow-sm ${
+                  isMe 
+                    ? 'bg-primary text-white self-end rounded-tr-none' 
+                    : 'bg-white text-text border border-border-custom self-start rounded-tl-none'
+                }`}
+              >
+                <p className="text-sm font-semibold leading-relaxed break-words">{msg.message}</p>
+                <span className={`text-[9px] font-bold self-end mt-0.5 flex items-center gap-1 ${isMe ? 'text-white/70' : 'text-text-muted'}`}>
+                  <Clock size={8} />
                   {new Date(msg.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -106,21 +122,24 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-2">
+      {/* Send Input Footer */}
+      <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-border-custom flex gap-3 shrink-0">
         <input 
           type="text" 
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Ketik pesan untuk pelanggan..."
-          className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all"
+          className="flex-1 bg-slate-50 border border-border-custom rounded-2xl px-5 py-3 text-sm font-semibold text-text placeholder-text-muted/65 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all duration-200"
         />
         <button 
           type="submit" 
           disabled={!newMessage.trim()}
-          className="bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors">
-          <Send size={18} className="ml-1" />
+          className="bg-primary hover:bg-primary-dark disabled:bg-slate-200 text-white disabled:text-text-muted w-11 h-11 rounded-2xl flex items-center justify-center transition-colors cursor-pointer shrink-0"
+        >
+          <Send size={16} />
         </button>
       </form>
+
     </div>
   );
 }
